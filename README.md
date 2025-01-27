@@ -1,3 +1,8 @@
+# Quick start
+1) Run ```npm i``` to install dependencies and Next.js. You may need to run ```npm run i --force``` due the newest version of Next.js not being 100% compatible with the other dependencies.
+2) Run ```npm run dev``` to start the local server
+3) Access ```localhost:3000``` in your browser
+
 # Dependencies
 npm install -g pnpm
 pnpm i shadcn@latest init
