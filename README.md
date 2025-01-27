@@ -1,4 +1,9 @@
 # Dependencies
+npm install -g pnpm
+pnpm i shadcn@latest init
+
+# Dashboard UI
+
 
 ## Library Selection
 Of the main charting libraries, we chose recharts due to its rising popularity and compatibility with react frameworks and specifically, nextjs. Recharts is also a living project with the most recent update just over a month ago compated to others (apart from chart.js) which recieved updated between five months and two years ago. We personally were not pleased with the default theming of recharts but after research, we found a collection called Shadcn/UI (https://ui.shadcn.com/docs). This is a libary of code containing themes for each of the components making the charts look much more modern. As a plus, it is not a dependency but rather an online library to reuse code in projects for free with no licensing required. (NOTE, SHADCN UI ALSO HAS AN NPM PACKAGE WITH CUSTOM COMPONENTS, KINDA FIRE. CONS; no longer super-light weight)

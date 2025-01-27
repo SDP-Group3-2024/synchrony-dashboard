@@ -1,28 +1,23 @@
-import Image from "next/image";
-import Link from 'next/link'
-// import '../styles/globals.css';
-
-
-import { mainModule } from "process";
+import { GradientGraph } from "@/components/charts/gradient-graph";
+import { LineGraph } from "@/components/charts/line-graph";
+import { PieGraph } from "@/components/charts/pie-graph";
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export default function Home() {
   return (
-    /* <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start"> */
-    <main>
-      <h1 style={{textAlign: "center"}}>Hello World!</h1>
-      <Link href="/about">About Page Link</Link>
-      <button style={{ display: "block", margin: "20px 0" }}>
-         About Page Button
-      </button>
-      <button className="button">Click Me</button>
-      <div className="image-grid">
-        <Image src="/images/image.png" alt="Image" width={200} height={200} />
-        <Image src="/images/image.png" alt="Image" width={200} height={200} />
-        <Image src="/images/image.png" alt="Image" width={200} height={200} />
-        <Image src="/images/image.png" alt="Image" width={200} height={200} />
-        <Image src="/images/image.png" alt="Image" width={200} height={200} />
-        <Image src="/images/image.png" alt="Image" width={200} height={200} />
+    // <div className="flex min-h-screen flex-col place-items-baseline justify-center">
+    <div>
+      <div className="grid grid-cols-3 gap-4 p-4">
+        <GradientGraph />
+        <LineGraph />
+        <PieGraph />
       </div>
-    </main>  
+      <div>
+      <Button asChild>
+        <Link href="/dashboard">Go to Dashboard</Link>
+      </Button>
+      </div>
+    </div>
   );
 }

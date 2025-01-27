@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import localFont from "next/font/local";
 import "./globals.css";
 
@@ -29,20 +28,6 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <nav>
-          <ul style={{ padding: 0, listStyle: "none", textAlign: "center" }}>
-            <h1>Nav Bar</h1>
-            <li style={{display: "inline", marginRight: "10px"}}>
-              <Link href="/">Home</Link>
-            </li>
-            <li style={{display: "inline", marginRight: "10px"}}>
-              <Link href="/charts">Charts</Link>
-            </li>
-            <li style={{display: "inline", marginRight: "10px"}}>
-              <Link href="/about">About Us</Link>
-            </li>
-          </ul>
-        </nav>
         {children}
       </body>
     </html>
