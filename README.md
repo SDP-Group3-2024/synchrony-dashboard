@@ -3,7 +3,7 @@
 2) Run ```npm run dev``` to start the local server
 3) Access ```localhost:3000``` in your browser
 
-~~# Dependencies
+~~ # Dependencies
 npm install -g pnpm
 pnpm i shadcn@latest init
 ~~
