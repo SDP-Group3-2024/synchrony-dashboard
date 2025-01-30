@@ -166,6 +166,9 @@ function getDateRangeText(timeRange: string): string {
 export function TestGraph() {
   const [timeRange, setTimeRange] = React.useState("90d")
   // TODO: create variable to select data column in a similar fashion
+  // create variable to save dataColumn. Once we have the variable, 
+  // we can replace the points in the code where "Desktop" is accessed with 
+  // the variable 
 
   const filteredData = chartData.filter((item) => {
     const date = new Date(item.date)
