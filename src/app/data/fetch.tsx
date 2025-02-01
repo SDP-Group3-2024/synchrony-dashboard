@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-
-const BASE_URL = "https://fxedsn67te.execute-api.us-east-1.amazonaws.com/dev/synchrony_data_analytics";
+//new api endpoint
+const BASE_URL = "https://kyoh9ri6zj.execute-api.us-east-1.amazonaws.com/dev/analytics";
+//const BASE_URL = "https://fxedsn67te.execute-api.us-east-1.amazonaws.com/dev/synchrony_data_analytics";
 
 // Defines the shape of the data you're expecting to receive
 interface Post {
