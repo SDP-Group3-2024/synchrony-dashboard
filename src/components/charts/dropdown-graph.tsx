@@ -164,16 +164,29 @@ function getDateRangeText(timeRange: string): string {
   }
 
 export function TestGraph() {
-  const [timeRange, setTimeRange] = React.useState("90d")
-  // TODO: create variable to select data column in a similar fashion
-  // create variable to save dataColumn. Once we have the variable, 
-  // we can replace the points in the code where "Desktop" is accessed with 
-  // the variable 
+  // Extract numeric column names dynamically
+  let availableColumns: string[] = [];
+  if (chartData.length > 0) {
+    availableColumns = Object.keys(chartData[0]).filter((key) => {
+      return typeof chartData[0][key] === "number";
+    });
+  }
+  
+  // Dynamically set default column
+  let defaultColumn = "";
+  if (availableColumns.length > 0) {
+    defaultColumn = availableColumns[0]; // Select the first available column
+  }
 
+  // set default states
+  const [dataColumn, setDataColumn] = React.useState(defaultColumn)
+  const [timeRange, setTimeRange] = React.useState("90d")
+
+  // Date filtering
   const filteredData = chartData.filter((item) => {
     const date = new Date(item.date)
 
-    let daysToSubtract = 90 // Default to 3 months
+    let daysToSubtract = 90 // default to 3 months
 
     if (timeRange === "7d") {
       daysToSubtract = 7
@@ -185,7 +198,7 @@ export function TestGraph() {
       return true // Show all data
     }
 
-    const startDate = new Date(latestDate) // Use dynamic latest date
+    const startDate = new Date(latestDate) // dynamically selecte todays date
     startDate.setDate(startDate.getDate() - daysToSubtract)
 
     return date >= startDate
@@ -195,70 +208,60 @@ export function TestGraph() {
     <Card>
       <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
         <div className="grid flex-1 gap-1 text-center sm:text-left">
-          <CardTitle>Area Chart - Gradiant</CardTitle>
+        <CardTitle>{`Site Visitors on: ${dataColumn || "Select a Data Column"}`}</CardTitle>
           <CardDescription>
             Showing total visitors for {getDateRangeText(timeRange)}
           </CardDescription>
         </div>
+
+        {/* Date Scale Selector */}
         <Select value={timeRange} onValueChange={setTimeRange}>
-          <SelectTrigger
-            className="w-[160px] rounded-lg sm:ml-auto"
-            aria-label="Select a value"
-          >
-            <SelectValue placeholder="Last 3 months" />
+          <SelectTrigger className="w-[160px] rounded-lg sm:ml-auto"aria-label="Select a value">
+            <SelectValue placeholder="Last 3 months"/>
           </SelectTrigger>
           <SelectContent className="rounded-xl">
-            <SelectItem value="all" className="rounded-lg">
-              All time
-            </SelectItem>
-            <SelectItem value="365d" className="rounded-lg">
-              Last year
-            </SelectItem>
-            <SelectItem value="90d" className="rounded-lg">
-              Last 3 months
-            </SelectItem>
-            <SelectItem value="30d" className="rounded-lg">
-              Last 30 days
-            </SelectItem>
-            <SelectItem value="7d" className="rounded-lg">
-              Last 7 days
-            </SelectItem>
+            <SelectItem value="all" className="rounded-lg">All time</SelectItem>
+            <SelectItem value="365d" className="rounded-lg">Last year</SelectItem>
+            <SelectItem value="90d" className="rounded-lg">Last 3 months</SelectItem>
+            <SelectItem value="30d" className="rounded-lg">Last 30 days</SelectItem>
+            <SelectItem value="7d" className="rounded-lg">Last 7 days</SelectItem>
           </SelectContent>
         </Select>
+
+        {/* Data Column Selector */}
+        <Select value={dataColumn} onValueChange={setDataColumn}>
+          <SelectTrigger className="w-[160px] rounded-lg sm:ml-auto"aria-label="Select a value">
+          
+          {/* Handle if datacolumn var is empty / DB query failed */}
+          <SelectValue>{dataColumn || "Select Data Column"}</SelectValue>
+          </SelectTrigger>
+          <SelectContent className="rounded-xl">
+            {availableColumns.map((column) => (
+              <SelectItem key={column} value={column}>
+                {column.charAt(0).toUpperCase() + column.slice(1)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
       </CardHeader>
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
-        <ChartContainer
-          config={chartConfig}
-          className="aspect-auto h-[250px] w-full"
-        >
-          <AreaChart data={filteredData}>
-            <defs>
-              <linearGradient id="fillDesktop" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="5%"
-                  stopColor="var(--color-desktop)"
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset="95%"
-                  stopColor="var(--color-desktop)"
-                  stopOpacity={0.1}
-                />
-              </linearGradient>
-              {/* Uncommneted code is the mobile dataset */}
-              {/* <linearGradient id="fillMobile" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="5%"
-                  stopColor="var(--color-mobile)"
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset="95%"
-                  stopColor="var(--color-mobile)"
-                  stopOpacity={0.1}
-                />
-              </linearGradient> */}
-            </defs>
+        <ChartContainer config={chartConfig} className="aspect-auto h-[250px] w-full">
+        <AreaChart key={dataColumn} data={filteredData}>
+        <defs>
+          <linearGradient id={`fill${dataColumn}`} x1="0" y1="0" x2="0" y2="1">
+            <stop
+              offset="5%"
+              stopColor={`var(--color-${dataColumn})`} // Dynamically apply color
+              stopOpacity={0.8}
+            />
+            <stop
+              offset="95%"
+              stopColor={`var(--color-${dataColumn})`} // Dynamically apply color
+              stopOpacity={0.1}
+            />
+          </linearGradient>
+        </defs>
             <CartesianGrid vertical={false} />
             <XAxis
               dataKey="date"
@@ -288,19 +291,13 @@ export function TestGraph() {
                 />
               }
             />
-            {/* <Area
-              dataKey="mobile"
-              type="natural"
-              fill="url(#fillMobile)"
-              stroke="var(--color-mobile)"
-              stackId="a"
-            /> */}
             <Area
-              dataKey="desktop"
+              dataKey={dataColumn}
               type="natural"
-              fill="url(#fillDesktop)"
-              stroke="var(--color-desktop)"
+              fill={`url(#fill${dataColumn})`}
+              stroke={`var(--color-${dataColumn})`}
               stackId="a"
+              isAnimationActive={true} // force animation
             />
             <ChartLegend content={<ChartLegendContent />} />
           </AreaChart>
