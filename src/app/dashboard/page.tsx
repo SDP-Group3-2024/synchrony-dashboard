@@ -5,7 +5,7 @@ import { PieGraph } from "@/components/charts/pie-graph"
 import { BarGraph } from "@/components/charts/bar-graph"
 import { RadarGraph } from "@/components/charts/radar-graph"
 import { DropdownGraph } from "@/components/charts/dropdown-graph"
-
+import UserJourneyTable from "@/app/table/UserJourneyTable"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -57,6 +57,9 @@ export default function Page() {
             <div className="col-span-full">
 
               <DropdownGraph></DropdownGraph>
+
+
+              <UserJourneyTable></UserJourneyTable>
             </div>
           </div>
           <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/75 md:min-h-min" />
