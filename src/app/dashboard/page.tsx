@@ -4,7 +4,7 @@ import { LineGraph } from "@/components/charts/line-graph"
 import { PieGraph } from "@/components/charts/pie-graph"
 import { BarGraph } from "@/components/charts/bar-graph"
 import { RadarGraph } from "@/components/charts/radar-graph"
-import { TestGraph } from "@/components/charts/dropdown-graph"
+import { DropdownGraph } from "@/components/charts/dropdown-graph"
 
 import {
   Breadcrumb,
@@ -56,7 +56,7 @@ export default function Page() {
             {/* TODO: I want this div below to stretch the entire width */}
             <div className="col-span-full">
 
-              <TestGraph></TestGraph>
+              <DropdownGraph></DropdownGraph>
             </div>
           </div>
           <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/75 md:min-h-min" />

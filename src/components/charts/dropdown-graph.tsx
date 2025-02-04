@@ -163,7 +163,7 @@ function getDateRangeText(timeRange: string): string {
     }
   }
 
-export function TestGraph() {
+export function DropdownGraph() {
   // Extract numeric column names dynamically
   let availableColumns: string[] = [];
   if (chartData.length > 0) {
