@@ -1,6 +1,39 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 
+// Function to format the AWS timestamp
+function formatTimestamp(timestamp) {
+  if (!timestamp) return ""; // Handle cases where timestamp might be missing or null
+
+  try {
+      // Check if the timestamp is numeric (Unix epoch in seconds)
+      const timestampNumber = Number(timestamp);
+      if (!isNaN(timestampNumber)) {
+          const date = new Date(timestampNumber * 1000); // Multiply by 1000 for milliseconds
+
+          // Options for toLocaleString (customize as needed)
+          const options = { 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric', 
+              hour: 'numeric', 
+              minute: 'numeric', 
+              second: 'numeric',
+              timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone // Use user's timezone
+          };
+
+          return date.toLocaleString(undefined, options);  // Or a specific locale like 'en-US'
+      } else {
+        //It's not a number, so it's probably already in a date format
+        const date = new Date(timestamp);
+        return date.toLocaleString();
+      }
+  } catch (error) {
+    console.error("Error formatting timestamp:", error);
+    return "Invalid Date"; // Or a suitable error message
+  }
+}
+
 function UserJourneyTable() {
   const [sessionId, setSessionId] = useState('');
   const [results, setResults] = useState([]);
@@ -16,7 +49,7 @@ function UserJourneyTable() {
     setLoading(true);
 
     try {
-      const response = await fetch(`/api/user-journey?session_id=${sessionId}`);
+      const response = await fetch(`https://kyoh9ri6zj.execute-api.us-east-1.amazonaws.com/dev/analytics?session_id=${sessionId}`);
       if (!response.ok) {
         throw new Error('Failed to fetch data');
       }
@@ -55,8 +88,8 @@ function UserJourneyTable() {
           {results.length > 0 ? (
             results.map((event, index) => (
               <tr key={index}>
-                <td>{new Date(event.timestamp).toLocaleString()}</td>
-                <td>{event.eventType}</td>
+                <td>{formatTimestamp(event.timestamp)}</td>
+                <td>{event.event_type}</td>
                 <td>{event.page}</td>
               </tr>
             ))
