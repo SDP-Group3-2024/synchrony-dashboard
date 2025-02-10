@@ -1,48 +1,34 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 
-// Function to format the AWS timestamp
+// Function to format AWS timestamp
 function formatTimestamp(timestamp) {
-  if (!timestamp) return ""; // Handle cases where timestamp might be missing or null
-
+  if (!timestamp) return "N/A"; 
   try {
-      // Check if the timestamp is numeric (Unix epoch in seconds)
-      const timestampNumber = Number(timestamp);
-      if (!isNaN(timestampNumber)) {
-          const date = new Date(timestampNumber * 1000); // Multiply by 1000 for milliseconds
-
-          // Options for toLocaleString (customize as needed)
-          const options = { 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric', 
-              hour: 'numeric', 
-              minute: 'numeric', 
-              second: 'numeric',
-              timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone // Use user's timezone
-          };
-
-          return date.toLocaleString(undefined, options);  // Or a specific locale like 'en-US'
-      } else {
-        //It's not a number, so it's probably already in a date format
-        const date = new Date(timestamp);
-        return date.toLocaleString();
-      }
+    const timestampNumber = Number(timestamp);
+    if (!isNaN(timestampNumber)) {
+      return new Date(timestampNumber * 1000).toLocaleString(undefined, { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone });
+    }
+    return new Date(timestamp).toLocaleString();
   } catch (error) {
     console.error("Error formatting timestamp:", error);
-    return "Invalid Date"; // Or a suitable error message
+    return "Invalid Date";
   }
 }
 
-function UserJourneyTable() {
+export default function UserJourneyTable() {
   const [sessionId, setSessionId] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  //const [error, setError] = useState<null | string>(() => null);
+
 
   const fetchData = async () => {
-    if (!sessionId) {
-      setError('Please enter a session ID.');
+    if (!sessionId.trim()) {
+      setError('Session ID cannot be empty.');
       return;
     }
     setError(null);
@@ -50,11 +36,10 @@ function UserJourneyTable() {
 
     try {
       const response = await fetch(`https://kyoh9ri6zj.execute-api.us-east-1.amazonaws.com/dev/analytics?session_id=${sessionId}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch data');
-      }
+      if (!response.ok) throw new Error('Failed to fetch data');
+
       const data = await response.json();
-      setResults(data.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)));
+      setResults(data.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()));
     } catch (error) {
       setError('Error fetching data. Please try again.');
       console.error('Fetch error:', error);
@@ -64,44 +49,52 @@ function UserJourneyTable() {
   };
 
   return (
-    <div>
-      <h2>User Journey Table</h2>
-      <input 
-        type="text" 
-        placeholder="Enter Session ID" 
-        value={sessionId} 
-        onChange={(e) => setSessionId(e.target.value)} 
-      />
-      <button onClick={fetchData} disabled={loading}>
-        {loading ? 'Loading...' : 'Query Database'}
-      </button>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <table border="1" cellPadding="5" cellSpacing="0">
-        <thead>
-          <tr>
-            <th>Timestamp</th>
-            <th>Event Type</th>
-            <th>Page</th>
-          </tr>
-        </thead>
-        <tbody>
-          {results.length > 0 ? (
-            results.map((event, index) => (
-              <tr key={index}>
-                <td>{formatTimestamp(event.timestamp)}</td>
-                <td>{event.event_type}</td>
-                <td>{event.page}</td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="3" style={{ textAlign: 'center' }}>No data available</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+    <div className="p-6 bg-white dark:bg-gray-900 rounded-lg shadow-lg">
+      <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100">User Journey Table</h2>
+
+      <div className="flex items-center gap-4 mb-4">
+        <Input
+          type="text"
+          placeholder="Enter Session ID"
+          value={sessionId}
+          onChange={(e) => setSessionId(e.target.value)}
+          className="w-64 border-gray-300 dark:border-gray-700"
+        />
+        <Button onClick={fetchData} disabled={loading} variant="default">
+          {loading ? 'Loading...' : 'Query Database'}
+        </Button>
+      </div>
+
+      
+
+      <div className="overflow-x-auto">
+        <Table className="w-full border border-gray-200 dark:border-gray-700 rounded-md">
+          <TableHeader className="bg-gray-100 dark:bg-gray-800">
+            <TableRow>
+              <TableHead className="w-1/3 px-4 py-2 text-left text-gray-800 dark:text-gray-200">Timestamp</TableHead>
+              <TableHead className="w-1/3 px-4 py-2 text-left text-gray-800 dark:text-gray-200">Event Type</TableHead>
+              <TableHead className="w-1/3 px-4 py-2 text-left text-gray-800 dark:text-gray-200">Page</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {results.length > 0 ? (
+              results.map((event, index) => (
+                <TableRow key={index} className="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all">
+                  <TableCell className="px-4 py-2">{formatTimestamp(event.timestamp)}</TableCell>
+                  <TableCell className="px-4 py-2">{event.event_type}</TableCell>
+                  <TableCell className="px-4 py-2">{event.page}</TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={3} className="px-4 py-4 text-center text-gray-500 dark:text-gray-400">
+                  No data available
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }
-
-export default UserJourneyTable;
