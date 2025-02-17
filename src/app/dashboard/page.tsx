@@ -6,6 +6,7 @@ import { BarGraph } from "@/components/charts/bar-graph";
 import { RadarGraph } from "@/components/charts/radar-graph";
 import { DropdownGraph } from "@/components/charts/dropdown-graph";
 import UserJourneyTable from "@/app/table/UserJourneyTable";
+import { SnakeyGraph } from "@/components/charts/snakey";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -71,6 +72,9 @@ export default function Page() {
             <div className="col-span-full w-full">
               <DropdownGraph />
               <UserJourneyTable />
+            </div>
+              <SnakeyGraph/>
+            <div>
             </div>
           </div>
 
