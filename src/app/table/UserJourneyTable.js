@@ -2,7 +2,15 @@
 import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Table, 
+  TableHeader, 
+  TableRow, 
+  TableHead, 
+  TableBody, 
+  TableCell 
+} from "@/components/ui/table";
 
 // Function to format AWS timestamp
 function formatTimestamp(timestamp) {
@@ -49,52 +57,61 @@ export default function UserJourneyTable() {
   };
 
   return (
-    <div className="p-6 bg-white dark:bg-gray-900 rounded-lg shadow-lg">
-      <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100">User Journey Table</h2>
+    // <div className="p-6 bg-white dark:bg-gray-900 rounded-lg shadow-lg">
+   <Card>
 
-      <div className="flex items-center gap-4 mb-4">
-        <Input
-          type="text"
-          placeholder="Enter Session ID"
-          value={sessionId}
-          onChange={(e) => setSessionId(e.target.value)}
-          className="w-64 border-gray-300 dark:border-gray-700"
-        />
-        <Button onClick={fetchData} disabled={loading} variant="default">
-          {loading ? 'Loading...' : 'Query Database'}
-        </Button>
-      </div>
+      <CardHeader>
+        <CardTitle>User Journey Table</CardTitle>
+        {/* <CardDescription>lorem ipsum</CardDescription> */}
+      </CardHeader>
 
-      
+    <CardContent>
+      <div>
+          <div className="flex items-center gap-4 mb-4">
+            <Input
+              type="text"
+              placeholder="Enter Session ID"
+              value={sessionId}
+              onChange={(e) => setSessionId(e.target.value)}
+              className="w-64 border-gray-300 dark:border-gray-700"
+              />
+            <Button onClick={fetchData} disabled={loading} variant="default">
+              {loading ? 'Loading...' : 'Query Database'}
+            </Button>
+          </div>
 
-      <div className="overflow-x-auto">
-        <Table className="w-full border border-gray-200 dark:border-gray-700 rounded-md">
-          <TableHeader className="bg-gray-100 dark:bg-gray-800">
-            <TableRow>
-              <TableHead className="w-1/3 px-4 py-2 text-left text-gray-800 dark:text-gray-200">Timestamp</TableHead>
-              <TableHead className="w-1/3 px-4 py-2 text-left text-gray-800 dark:text-gray-200">Event Type</TableHead>
-              <TableHead className="w-1/3 px-4 py-2 text-left text-gray-800 dark:text-gray-200">Page</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {results.length > 0 ? (
-              results.map((event, index) => (
-                <TableRow key={index} className="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all">
-                  <TableCell className="px-4 py-2">{formatTimestamp(event.timestamp)}</TableCell>
-                  <TableCell className="px-4 py-2">{event.event_type}</TableCell>
-                  <TableCell className="px-4 py-2">{event.page}</TableCell>
+          
+
+          <div className="overflow-x-auto">
+            <Table className="w-full border border-gray-200 dark:border-gray-700 rounded-md">
+              <TableHeader className="bg-gray-100 dark:bg-gray-800">
+                <TableRow>
+                  <TableHead className="w-1/3 px-4 py-2 text-left text-gray-800 dark:text-gray-200">Timestamp</TableHead>
+                  <TableHead className="w-1/3 px-4 py-2 text-left text-gray-800 dark:text-gray-200">Event Type</TableHead>
+                  <TableHead className="w-1/3 px-4 py-2 text-left text-gray-800 dark:text-gray-200">Page</TableHead>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={3} className="px-4 py-4 text-center text-gray-500 dark:text-gray-400">
-                  No data available
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
+              </TableHeader>
+              <TableBody>
+                {results.length > 0 ? (
+                  results.map((event, index) => (
+                    <TableRow key={index} className="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all">
+                      <TableCell className="px-4 py-2">{formatTimestamp(event.timestamp)}</TableCell>
+                      <TableCell className="px-4 py-2">{event.event_type}</TableCell>
+                      <TableCell className="px-4 py-2">{event.page}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={3} className="px-4 py-4 text-center text-gray-500 dark:text-gray-400">
+                      No data available
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
