@@ -5,3 +5,8 @@ export interface PageExitEvent {
   session_id: string;
   timestamp: number;
 }
+
+export interface SankeyChartProps {
+  nodes: { id: string }[];
+  links: { source: string; target: string; value: number }[];
+}

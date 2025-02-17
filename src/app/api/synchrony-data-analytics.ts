@@ -1,7 +1,7 @@
 "use server";
 import { DynamoDBClient, QueryCommand } from "@aws-sdk/client-dynamodb";
 import { unmarshall } from "@aws-sdk/util-dynamodb";
-import { PageExitEvent } from "./types";
+import { PageExitEvent, SankeyChartProps } from "./types";
 
 // Load environment variables
 const region = process.env.AWS_REGION;
@@ -46,7 +46,7 @@ export async function GetEvents(eventType: string): Promise<PageExitEvent[]> {
   return [];
 }
 
-export async function GetSankeyData() {
+export async function GetSankeyData(): Promise<SankeyChartProps> {
   // In the future, this will come from a database.
   await new Promise((resolve) => setTimeout(resolve, 500));
   return {

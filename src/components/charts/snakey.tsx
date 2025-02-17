@@ -1,5 +1,4 @@
 import { TrendingUp } from "lucide-react";
-import { ResponsiveSankey } from "@nivo/sankey";
 
 import {
   Card,
@@ -11,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { ChartConfig, ChartContainer } from "@/components/ui/chart";
 import { GetSankeyData } from "@/app/api/synchrony-data-analytics";
+import SankeyClientWrapper from "./snakey-wrapper";
 
 // Define a config object for ChartContainer
 const chartConfig: ChartConfig = {
@@ -30,23 +30,7 @@ export async function SnakeyGraph() {
       </CardHeader>
       <CardContent className="">
         <ChartContainer config={chartConfig}>
-          <ResponsiveSankey
-            data={sankeyData}
-            margin={{ top: 40, right: 60, bottom: 40, left: 60 }}
-            align="justify"
-            // colors={{ scheme: "nivo" }}
-            colors={["#2a9d90", "#274754", "#f4a462", "#e8c468", "e76e50"]}
-            nodeOpacity={1}
-            nodeThickness={18}
-            nodeBorderWidth={1}
-            nodeBorderColor={{ from: "color", modifiers: [["darker", 0.8]] }}
-            linkOpacity={0.5}
-            linkHoverOthersOpacity={0.1}
-            labelPosition="outside"
-            labelOrientation="horizontal"
-            labelPadding={16}
-            labelTextColor={{ from: "color", modifiers: [["darker", 1.2]] }}
-          />
+          <SankeyClientWrapper data={sankeyData} />
         </ChartContainer>
       </CardContent>
       <CardFooter className="flex-col items-start gap-2 text-sm">
