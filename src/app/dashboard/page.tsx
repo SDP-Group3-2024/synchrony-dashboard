@@ -25,12 +25,10 @@ import {
 export default function Page() {
   return (
     <SidebarProvider>
-      {/* Sidebar Component */}
       <AppSidebar />
 
       {/* Main Content Area */}
-      <SidebarInset>
-        {/* Header with Sidebar Toggle */}
+      <SidebarInset>  {/* Header with Sidebar Toggle */}
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger className="-ml-1" />
           <Breadcrumb>
@@ -48,7 +46,7 @@ export default function Page() {
 
         {/* Main Content Grid */}
         <div className="flex flex-1 flex-col gap-4 p-4">
-          <div className="grid auto-rows-min gap-4 md:grid-cols-3">
+          <div className="grid auto-rows-min gap-4 sm:grid-cols-1 md:grid-cols-3">
             <div className="aspect-video rounded-xl bg-muted/75">
               <BarGraph />
             </div>
@@ -71,7 +69,12 @@ export default function Page() {
             {/* Full-width Section for Table and Dropdown */}
             <div className="col-span-full w-full">
               <DropdownGraph />
+            </div>
+            <div className="col-span-full w-full">
               <UserJourneyTable />
+            </div>
+            <div className="col-span-full w-full">
+              <SnakeyGraph/>
             </div>
           </div>
 
