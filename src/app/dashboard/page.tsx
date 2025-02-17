@@ -24,7 +24,6 @@ import { GetEvents } from "../api/synchrony-data-analytics";
 
 export default async function Page() {
   const events = await GetEvents("page_exit");
-  Ï;
   console.log(events);
 
   return (
