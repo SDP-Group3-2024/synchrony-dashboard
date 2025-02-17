@@ -55,7 +55,7 @@ export function BarGraph() {
               axisLine={false}
               tickFormatter={(value) => value.slice(0, 3)}
             />
-            <YAxis/>
+            <YAxis width={30} />
             <ChartTooltip
               cursor={false}
               content={<ChartTooltipContent indicator="dashed" />}
