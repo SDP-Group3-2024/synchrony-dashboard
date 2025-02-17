@@ -1,5 +1,3 @@
-"use client";
-
 import { TrendingUp } from "lucide-react";
 import { ResponsiveSankey } from "@nivo/sankey";
 
@@ -12,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ChartConfig, ChartContainer } from "@/components/ui/chart";
+import { GetSankeyData } from "@/app/api/synchrony-data-analytics";
 
 // Define a config object for ChartContainer
 const chartConfig: ChartConfig = {
@@ -21,34 +20,8 @@ const chartConfig: ChartConfig = {
   },
 };
 
-const sankeyData = {
-    nodes: [
-      { id: "Page 1" },
-      { id: "Page 2" },
-      { id: "Page 3" },
-      { id: "Page 4" },
-      { id: "Page 5" },
-      { id: "User Exit" },
-    ],
-    links: [
-      { source: "Page 1", target: "Page 2", value: 200 },
-      { source: "Page 1", target: "Page 3", value: 150 },
-      { source: "Page 1", target: "Page 4", value: 150 },
-      { source: "Page 2", target: "Page 3", value: 50 },
-      { source: "Page 2", target: "Page 4", value: 50 },
-      { source: "Page 2", target: "Page 5", value: 50 },
-      { source: "Page 3", target: "Page 4", value: 120 },
-      { source: "Page 3", target: "Page 5", value: 120 },
-      { source: "Page 4", target: "Page 5", value: 60 },
-      {source: "Page 2", target: "User Exit", value: 30},
-      {source: "Page 1", target: "User Exit", value: 70},
-      {source: "Page 3", target: "User Exit", value: 10},
-      {source: "Page 4", target: "User Exit", value: 8},
-    ],
-  };
-  
-
-export function SnakeyGraph() {
+export async function SnakeyGraph() {
+  const sankeyData = await GetSankeyData();
   return (
     <Card>
       <CardHeader>
@@ -62,7 +35,7 @@ export function SnakeyGraph() {
             margin={{ top: 40, right: 60, bottom: 40, left: 60 }}
             align="justify"
             // colors={{ scheme: "nivo" }}
-            colors = {['#2a9d90','#274754','#f4a462','#e8c468', 'e76e50']}
+            colors={["#2a9d90", "#274754", "#f4a462", "#e8c468", "e76e50"]}
             nodeOpacity={1}
             nodeThickness={18}
             nodeBorderWidth={1}
@@ -78,7 +51,8 @@ export function SnakeyGraph() {
       </CardContent>
       <CardFooter className="flex-col items-start gap-2 text-sm">
         <div className="flex gap-2 font-medium leading-none">
-          Conversion rates increased by __% since Jan 2025 <TrendingUp className="h-4 w-4" />
+          Conversion rates increased by __% since Jan 2025{" "}
+          <TrendingUp className="h-4 w-4" />
         </div>
         <div className="leading-none text-muted-foreground">
           Showing customer journey from Page 1 to Page 4

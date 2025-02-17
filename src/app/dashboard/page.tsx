@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
 import { GradientGraph } from "@/components/charts/gradient-graph";
 import { LineGraph } from "@/components/charts/line-graph";
@@ -25,6 +26,9 @@ import { GetEvents } from "../api/synchrony";
 export default async function Page() {
   const events = await GetEvents("page_exit");
   console.log(events);
+  useEffect(() => {
+    console.log("useEffect called");
+  }, []);
   return (
     <SidebarProvider>
       <AppSidebar />
