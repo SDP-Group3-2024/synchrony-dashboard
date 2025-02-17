@@ -65,16 +65,13 @@ export default function Page() {
               <RadarGraph />
             </div>
             <div className="aspect-video rounded-xl bg-muted/75">
-              <GradientGraph />
+              <SnakeyGraph/>
             </div>
 
             {/* Full-width Section for Table and Dropdown */}
             <div className="col-span-full w-full">
               <DropdownGraph />
               <UserJourneyTable />
-            </div>
-              <SnakeyGraph/>
-            <div>
             </div>
           </div>
 

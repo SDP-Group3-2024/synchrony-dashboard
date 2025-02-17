@@ -46,13 +46,14 @@ export function SnakeyGraph() {
         <CardTitle>Sankey Flow</CardTitle>
         <CardDescription>Synchrony Traffic Flow</CardDescription>
       </CardHeader>
-      <CardContent className="h-[400px]">
+      <CardContent className="">
         <ChartContainer config={chartConfig}>
           <ResponsiveSankey
             data={sankeyData}
             margin={{ top: 40, right: 50, bottom: 40, left: 50 }}
             align="justify"
-            colors={{ scheme: "category10" }}
+            // colors={{ scheme: "nivo" }}
+            colors = {['#2a9d90','#274754','#f4a462','#e8c468', 'e76e50']}
             nodeOpacity={1}
             nodeThickness={18}
             nodeBorderWidth={1}
