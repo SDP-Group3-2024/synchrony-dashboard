@@ -27,6 +27,8 @@ const sankeyData = {
       { id: "Page 2" },
       { id: "Page 3" },
       { id: "Page 4" },
+      { id: "Page 5" },
+      { id: "User Exit" },
     ],
     links: [
       { source: "Page 1", target: "Page 2", value: 200 },
@@ -34,7 +36,14 @@ const sankeyData = {
       { source: "Page 1", target: "Page 4", value: 150 },
       { source: "Page 2", target: "Page 3", value: 50 },
       { source: "Page 2", target: "Page 4", value: 50 },
+      { source: "Page 2", target: "Page 5", value: 50 },
       { source: "Page 3", target: "Page 4", value: 120 },
+      { source: "Page 3", target: "Page 5", value: 120 },
+      { source: "Page 4", target: "Page 5", value: 60 },
+      {source: "Page 2", target: "User Exit", value: 30},
+      {source: "Page 1", target: "User Exit", value: 70},
+      {source: "Page 3", target: "User Exit", value: 10},
+      {source: "Page 4", target: "User Exit", value: 8},
     ],
   };
   
@@ -50,7 +59,7 @@ export function SnakeyGraph() {
         <ChartContainer config={chartConfig}>
           <ResponsiveSankey
             data={sankeyData}
-            margin={{ top: 40, right: 50, bottom: 40, left: 50 }}
+            margin={{ top: 40, right: 60, bottom: 40, left: 60 }}
             align="justify"
             // colors={{ scheme: "nivo" }}
             colors = {['#2a9d90','#274754','#f4a462','#e8c468', 'e76e50']}
