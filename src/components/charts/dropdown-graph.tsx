@@ -1,19 +1,14 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { 
-    Area, 
-    AreaChart, 
-    CartesianGrid, 
-    XAxis 
-} from "recharts"
+import * as React from "react";
+import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   ChartConfig,
   ChartContainer,
@@ -21,16 +16,22 @@ import {
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart"
+} from "@/components/ui/chart";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 
-const chartData = [
+type SiteUsageDatum = {
+  date: string;
+  desktop: number;
+  mobile: number;
+};
+
+const chartData: SiteUsageDatum[] = [
   { date: "2024-04-01", desktop: 222, mobile: 150 },
   { date: "2024-04-02", desktop: 97, mobile: 180 },
   { date: "2024-04-03", desktop: 167, mobile: 120 },
@@ -122,11 +123,11 @@ const chartData = [
   { date: "2024-06-28", desktop: 149, mobile: 200 },
   { date: "2024-06-29", desktop: 103, mobile: 160 },
   { date: "2024-06-30", desktop: 446, mobile: 400 },
-]
+];
 
 const latestDate = new Date(
-    Math.max(...chartData.map((d) => new Date(d.date).getTime()))
-  )
+  Math.max(...chartData.map((d) => new Date(d.date).getTime())),
+);
 
 const chartConfig = {
   visitors: {
@@ -140,38 +141,37 @@ const chartConfig = {
     label: "Mobile",
     color: "hsl(var(--chart-2))",
   },
-} satisfies ChartConfig
+} satisfies ChartConfig;
 
 function getDateRangeText(timeRange: string): string {
-    if (timeRange === "all") {
-        return "All Time"
-    }
-    if (timeRange === "7d") {
-        return "the last 7 days"
-    }
-    if (timeRange === "30d") {
-        return "the last 30 days"
-    }
-    if (timeRange === "90d"){
-        return "the last 3 months"
-    }
-    if (timeRange === "365d"){
-        return "the last 1 year"
-    } 
-    else {
-        return "..."
-    }
+  if (timeRange === "all") {
+    return "All Time";
   }
+  if (timeRange === "7d") {
+    return "the last 7 days";
+  }
+  if (timeRange === "30d") {
+    return "the last 30 days";
+  }
+  if (timeRange === "90d") {
+    return "the last 3 months";
+  }
+  if (timeRange === "365d") {
+    return "the last 1 year";
+  } else {
+    return "...";
+  }
+}
 
 export function DropdownGraph() {
   // Extract numeric column names dynamically
   let availableColumns: string[] = [];
   if (chartData.length > 0) {
     availableColumns = Object.keys(chartData[0]).filter((key) => {
-      return typeof chartData[0][key] === "number";
+      if (key === "date") return false;
     });
   }
-  
+
   // Dynamically set default column
   let defaultColumn = "";
   if (availableColumns.length > 0) {
@@ -179,36 +179,36 @@ export function DropdownGraph() {
   }
 
   // set default states
-  const [dataColumn, setDataColumn] = React.useState(defaultColumn)
-  const [timeRange, setTimeRange] = React.useState("90d")
+  const [dataColumn, setDataColumn] = React.useState(defaultColumn);
+  const [timeRange, setTimeRange] = React.useState("90d");
 
   // Date filtering
   const filteredData = chartData.filter((item) => {
-    const date = new Date(item.date)
+    const date = new Date(item.date);
 
-    let daysToSubtract = 90 // default to 3 months
+    let daysToSubtract = 90; // default to 3 months
 
     if (timeRange === "7d") {
-      daysToSubtract = 7
+      daysToSubtract = 7;
     } else if (timeRange === "30d") {
-      daysToSubtract = 30
+      daysToSubtract = 30;
     } else if (timeRange === "365d") {
-      daysToSubtract = 365
+      daysToSubtract = 365;
     } else if (timeRange === "all") {
-      return true // Show all data
+      return true; // Show all data
     }
 
-    const startDate = new Date(latestDate) // dynamically selecte todays date
-    startDate.setDate(startDate.getDate() - daysToSubtract)
+    const startDate = new Date(latestDate); // dynamically selecte todays date
+    startDate.setDate(startDate.getDate() - daysToSubtract);
 
-    return date >= startDate
-  })
+    return date >= startDate;
+  });
 
   return (
     <Card>
       <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
         <div className="grid flex-1 gap-1 text-center sm:text-left">
-        <CardTitle>{`Site Visitors on: ${dataColumn || "Select a Data Column"}`}</CardTitle>
+          <CardTitle>{`Site Visitors on: ${dataColumn || "Select a Data Column"}`}</CardTitle>
           <CardDescription>
             Showing total visitors for {getDateRangeText(timeRange)}
           </CardDescription>
@@ -216,24 +216,39 @@ export function DropdownGraph() {
 
         {/* Date Scale Selector */}
         <Select value={timeRange} onValueChange={setTimeRange}>
-          <SelectTrigger className="w-[160px] rounded-lg sm:ml-auto"aria-label="Select a value">
-            <SelectValue placeholder="Last 3 months"/>
+          <SelectTrigger
+            className="w-[160px] rounded-lg sm:ml-auto"
+            aria-label="Select a value"
+          >
+            <SelectValue placeholder="Last 3 months" />
           </SelectTrigger>
           <SelectContent className="rounded-xl">
-            <SelectItem value="all" className="rounded-lg">All time</SelectItem>
-            <SelectItem value="365d" className="rounded-lg">Last year</SelectItem>
-            <SelectItem value="90d" className="rounded-lg">Last 3 months</SelectItem>
-            <SelectItem value="30d" className="rounded-lg">Last 30 days</SelectItem>
-            <SelectItem value="7d" className="rounded-lg">Last 7 days</SelectItem>
+            <SelectItem value="all" className="rounded-lg">
+              All time
+            </SelectItem>
+            <SelectItem value="365d" className="rounded-lg">
+              Last year
+            </SelectItem>
+            <SelectItem value="90d" className="rounded-lg">
+              Last 3 months
+            </SelectItem>
+            <SelectItem value="30d" className="rounded-lg">
+              Last 30 days
+            </SelectItem>
+            <SelectItem value="7d" className="rounded-lg">
+              Last 7 days
+            </SelectItem>
           </SelectContent>
         </Select>
 
         {/* Data Column Selector */}
         <Select value={dataColumn} onValueChange={setDataColumn}>
-          <SelectTrigger className="w-[160px] rounded-lg sm:ml-auto"aria-label="Select a value">
-          
-          {/* Handle if datacolumn var is empty / DB query failed */}
-          <SelectValue>{dataColumn || "Select Data Column"}</SelectValue>
+          <SelectTrigger
+            className="w-[160px] rounded-lg sm:ml-auto"
+            aria-label="Select a value"
+          >
+            {/* Handle if datacolumn var is empty / DB query failed */}
+            <SelectValue>{dataColumn || "Select Data Column"}</SelectValue>
           </SelectTrigger>
           <SelectContent className="rounded-xl">
             {availableColumns.map((column) => (
@@ -243,25 +258,33 @@ export function DropdownGraph() {
             ))}
           </SelectContent>
         </Select>
-
       </CardHeader>
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
-        <ChartContainer config={chartConfig} className="aspect-auto h-[250px] w-full">
-        <AreaChart key={dataColumn} data={filteredData}>
-        <defs>
-          <linearGradient id={`fill${dataColumn}`} x1="0" y1="0" x2="0" y2="1">
-            <stop
-              offset="5%"
-              stopColor={`var(--color-${dataColumn})`} // Dynamically apply color
-              stopOpacity={0.8}
-            />
-            <stop
-              offset="95%"
-              stopColor={`var(--color-${dataColumn})`} // Dynamically apply color
-              stopOpacity={0.1}
-            />
-          </linearGradient>
-        </defs>
+        <ChartContainer
+          config={chartConfig}
+          className="aspect-auto h-[250px] w-full"
+        >
+          <AreaChart key={dataColumn} data={filteredData}>
+            <defs>
+              <linearGradient
+                id={`fill${dataColumn}`}
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              >
+                <stop
+                  offset="5%"
+                  stopColor={`var(--color-${dataColumn})`} // Dynamically apply color
+                  stopOpacity={0.8}
+                />
+                <stop
+                  offset="95%"
+                  stopColor={`var(--color-${dataColumn})`} // Dynamically apply color
+                  stopOpacity={0.1}
+                />
+              </linearGradient>
+            </defs>
             <CartesianGrid vertical={false} />
             <XAxis
               dataKey="date"
@@ -270,11 +293,11 @@ export function DropdownGraph() {
               tickMargin={8}
               minTickGap={32}
               tickFormatter={(value) => {
-                const date = new Date(value)
+                const date = new Date(value);
                 return date.toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",
-                })
+                });
               }}
             />
             <ChartTooltip
@@ -285,7 +308,7 @@ export function DropdownGraph() {
                     return new Date(value).toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
-                    })
+                    });
                   }}
                   indicator="dot"
                 />
@@ -304,5 +327,5 @@ export function DropdownGraph() {
         </ChartContainer>
       </CardContent>
     </Card>
-  )
+  );
 }

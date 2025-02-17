@@ -15,7 +15,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Separator } from "@/components/ui/separator";
 import {
   SidebarInset,
   SidebarProvider,
@@ -28,7 +27,9 @@ export default function Page() {
       <AppSidebar />
 
       {/* Main Content Area */}
-      <SidebarInset>  {/* Header with Sidebar Toggle */}
+      <SidebarInset>
+        {" "}
+        {/* Header with Sidebar Toggle */}
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger className="-ml-1" />
           <Breadcrumb>
@@ -43,7 +44,6 @@ export default function Page() {
             </BreadcrumbList>
           </Breadcrumb>
         </header>
-
         {/* Main Content Grid */}
         <div className="flex flex-1 flex-col gap-4 p-4">
           <div className="grid auto-rows-min gap-4 sm:grid-cols-1 md:grid-cols-3">
@@ -63,7 +63,7 @@ export default function Page() {
               <RadarGraph />
             </div>
             <div className="aspect-video rounded-xl bg-muted/75">
-              <SnakeyGraph/>
+              <SnakeyGraph />
             </div>
 
             {/* Full-width Section for Table and Dropdown */}
@@ -74,7 +74,7 @@ export default function Page() {
               <UserJourneyTable />
             </div>
             <div className="col-span-full w-full">
-              <SnakeyGraph/>
+              <SnakeyGraph />
             </div>
           </div>
 
