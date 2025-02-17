@@ -20,8 +20,11 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { GetEvents } from "../api/synchrony";
 
-export default function Page() {
+export default async function Page() {
+  const events = await GetEvents("page_exit");
+  console.log(events);
   return (
     <SidebarProvider>
       <AppSidebar />
