@@ -14,8 +14,8 @@ import { getSankeyData } from "@/app/lib/dynamodb";
 import { format } from "date-fns";
 
 export async function SnakeyGraph() {
-  const defaultStartDate = format(new Date(), "2024-11-01");
-  const defaultEndDate = format(new Date(), "2024-11-31");
+  const defaultStartDate = format(new Date(), "2025-02-01");
+  const defaultEndDate = format(new Date(), "2025-02-15");
 
   const initialSankeyData = await getSankeyData(
     defaultStartDate,

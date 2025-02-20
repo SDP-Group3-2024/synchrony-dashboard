@@ -23,9 +23,6 @@ import {
 import { getEvents } from "@/app/lib/dynamodb";
 
 export default async function Page() {
-  const events = await getEvents("page_exit");
-  console.log(events);
-
   return (
     <SidebarProvider>
       <AppSidebar />
