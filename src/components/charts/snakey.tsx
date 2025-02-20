@@ -11,15 +11,14 @@ import {
 } from "@/components/ui/card";
 import SankeyClientWrapper from "./snakey-wrapper";
 import { getSankeyData } from "@/app/lib/dynamodb";
-import { format } from "date-fns";
 
 export async function SnakeyGraph() {
-  const defaultStartDate = format(new Date(), "2025-02-01");
-  const defaultEndDate = format(new Date(), "2025-02-15");
+  const defaultStartDate = new Date("2025-02-01T00:00:00");
+  const defaultEndDate = new Date("2025-02-15T00:00:00");
 
   const initialSankeyData = await getSankeyData(
-    defaultStartDate,
-    defaultEndDate,
+    defaultStartDate.toISOString().split("T")[0],
+    defaultEndDate.toISOString().split("T")[0],
   );
 
   return (
@@ -29,7 +28,12 @@ export async function SnakeyGraph() {
         <CardDescription>Synchrony Traffic Flow</CardDescription>
       </CardHeader>
       <CardContent className="">
-        <SankeyClientWrapper initialData={initialSankeyData} />{" "}
+        <SankeyClientWrapper
+          initialDateRange={[
+            { startDate: defaultStartDate, endDate: defaultEndDate },
+          ]}
+          initialData={initialSankeyData}
+        />{" "}
       </CardContent>
       <CardFooter className="flex-col items-start gap-2 text-sm">
         <div className="flex gap-2 font-medium leading-none">

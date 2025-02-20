@@ -1,43 +1,44 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import { SankeyChartProps } from "@/app/lib/types";
 import { ResponsiveSankey } from "@nivo/sankey";
-import { DateRange, DateRangePickerProps } from "react-date-range";
+import {
+  DateRange,
+  DateRangePickerProps,
+  RangeKeyDict,
+} from "react-date-range";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 import { format } from "date-fns";
 import { ChartConfig, ChartContainer } from "../ui/chart";
 
 interface SankeyClientWrapperProps {
+  initialDateRange: DateRangePickerProps["ranges"];
   initialData: SankeyChartProps;
 }
 
 const SankeyClientWrapper: React.FC<SankeyClientWrapperProps> = ({
+  initialDateRange,
   initialData,
 }) => {
   const [sankeyData, setSankeyData] = useState<SankeyChartProps>(initialData);
-  const [dateRange, setDateRange] = useState<DateRangePickerProps["ranges"]>([
-    {
-      startDate: new Date(),
-      endDate: new Date(),
-      key: "selection",
-    },
-  ]);
+  const [dateRange, setDateRange] =
+    useState<DateRangePickerProps["ranges"]>(initialDateRange);
   const chartConfig: ChartConfig = {
     sankey: {
       label: "Sankey Flow",
       color: "hsl(var(--chart-1))",
     },
   };
+  console.log("initialDateRange", initialDateRange);
+  const fetchData = useCallback(
+    async (ranges: DateRangePickerProps["ranges"]) => {
+      if (!ranges || !ranges[0].startDate || !ranges[0].endDate) return;
 
-  useEffect(() => {
-    async function fetchData() {
-      if (!dateRange || !dateRange[0].startDate || !dateRange[0].endDate)
-        return;
-      const startDate = format(dateRange[0].startDate, "yyyy-MM-dd");
-      const endDate = format(dateRange[0].endDate, "yyyy-MM-dd");
-
+      const startDate = format(ranges[0].startDate, "yyyy-MM-dd");
+      const endDate = format(ranges[0].endDate, "yyyy-MM-dd");
+      console.log(startDate, endDate);
       try {
         const response = await fetch(
           `/api/sankey-data?startDate=${startDate}&endDate=${endDate}`,
@@ -50,20 +51,23 @@ const SankeyClientWrapper: React.FC<SankeyClientWrapperProps> = ({
       } catch (error) {
         console.error("Error fetching data:", error);
       }
-    }
+    },
+    [],
+  );
 
-    fetchData();
-  }, [dateRange]);
-
-  const handleDateChange = (ranges: DateRangePickerProps["ranges"]) => {
-    setDateRange(ranges);
+  const handleDateChange = (range: RangeKeyDict) => {
+    console.log(range);
+    const { startDate, endDate } = range["range1"];
+    if (!startDate || !endDate) return;
+    setDateRange([{ startDate, endDate }]);
+    fetchData(dateRange);
   };
 
   return (
     <div>
       <DateRange
         ranges={dateRange}
-        onChange={() => handleDateChange}
+        onChange={(e: RangeKeyDict) => handleDateChange(e)}
         maxDate={new Date()}
       />
       <ChartContainer config={chartConfig}>
