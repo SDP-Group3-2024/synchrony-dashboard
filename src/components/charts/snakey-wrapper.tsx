@@ -25,6 +25,7 @@ const SankeyClientWrapper: React.FC<SankeyClientWrapperProps> = ({
   const [sankeyData, setSankeyData] = useState<SankeyChartProps>(initialData);
   const [dateRange, setDateRange] =
     useState<DateRangePickerProps["ranges"]>(initialDateRange);
+  const [isLoading, setIsLoading] = useState(false);
   const chartConfig: ChartConfig = {
     sankey: {
       label: "Sankey Flow",
@@ -34,6 +35,7 @@ const SankeyClientWrapper: React.FC<SankeyClientWrapperProps> = ({
   console.log("initialDateRange", initialDateRange);
   const fetchData = useCallback(
     async (ranges: DateRangePickerProps["ranges"]) => {
+      setIsLoading(true);
       if (!ranges || !ranges[0].startDate || !ranges[0].endDate) return;
 
       const startDate = format(ranges[0].startDate, "yyyy-MM-dd");
@@ -50,21 +52,23 @@ const SankeyClientWrapper: React.FC<SankeyClientWrapperProps> = ({
         setSankeyData(data);
       } catch (error) {
         console.error("Error fetching data:", error);
+      } finally {
+        setIsLoading(false);
       }
     },
     [],
   );
 
-  const handleDateChange = (range: RangeKeyDict) => {
-    console.log(range);
+  const handleDateChange = async (range: RangeKeyDict) => {
     const { startDate, endDate } = range["range1"];
     if (!startDate || !endDate) return;
     setDateRange([{ startDate, endDate }]);
-    fetchData(dateRange);
+
+    await fetchData(dateRange);
   };
 
   return (
-    <div>
+    <div className={`${isLoading ? "opacity-50" : ""}`}>
       <DateRange
         ranges={dateRange}
         onChange={(e: RangeKeyDict) => handleDateChange(e)}
