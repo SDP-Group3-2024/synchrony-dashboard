@@ -12,6 +12,7 @@ import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 import { format } from "date-fns";
 import { ChartConfig, ChartContainer } from "../ui/chart";
+import { Button } from "../ui/button";
 
 interface SankeyClientWrapperProps {
   initialDateRange: DateRangePickerProps["ranges"];
@@ -26,6 +27,7 @@ const SankeyClientWrapper: React.FC<SankeyClientWrapperProps> = ({
   const [dateRange, setDateRange] =
     useState<DateRangePickerProps["ranges"]>(initialDateRange);
   const [isLoading, setIsLoading] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const chartConfig: ChartConfig = {
     sankey: {
       label: "Sankey Flow",
@@ -67,31 +69,42 @@ const SankeyClientWrapper: React.FC<SankeyClientWrapperProps> = ({
     await fetchData(dateRange);
   };
 
+  const handleShowDatePicker = () => {
+    setShowDatePicker(!showDatePicker);
+  };
+
   return (
-    <div className={`${isLoading ? "opacity-50" : ""}`}>
-      <DateRange
-        ranges={dateRange}
-        onChange={(e: RangeKeyDict) => handleDateChange(e)}
-        maxDate={new Date()}
-      />
-      <ChartContainer config={chartConfig}>
-        <ResponsiveSankey
-          data={sankeyData}
-          margin={{ top: 80, right: 120, bottom: 80, left: 120 }}
-          align="justify"
-          colors={["#2a9d90", "#274754", "#f4a462", "#e8c468", "e76e50"]}
-          nodeOpacity={1}
-          nodeThickness={18}
-          nodeBorderWidth={1}
-          nodeBorderColor={{ from: "color", modifiers: [["darker", 0.8]] }}
-          linkOpacity={0.5}
-          linkHoverOthersOpacity={0.1}
-          labelPosition="outside"
-          labelOrientation="horizontal"
-          labelPadding={16}
-          labelTextColor={{ from: "color", modifiers: [["darker", 1.2]] }}
+    <div>
+      <Button onClick={handleShowDatePicker}>
+        {showDatePicker ? "Hide Date Picker" : "Show Date Picker"}
+      </Button>
+      {showDatePicker && (
+        <DateRange
+          ranges={dateRange}
+          onChange={(selection) => handleDateChange(selection)}
+          maxDate={new Date()}
         />
-      </ChartContainer>
+      )}
+      <div className={`${isLoading ? "opacity-50" : ""}`}>
+        <ChartContainer config={chartConfig}>
+          <ResponsiveSankey
+            data={sankeyData}
+            margin={{ top: 80, right: 120, bottom: 80, left: 120 }}
+            align="justify"
+            colors={["#2a9d90", "#274754", "#f4a462", "#e8c468", "e76e50"]}
+            nodeOpacity={1}
+            nodeThickness={18}
+            nodeBorderWidth={1}
+            nodeBorderColor={{ from: "color", modifiers: [["darker", 0.8]] }}
+            linkOpacity={0.5}
+            linkHoverOthersOpacity={0.1}
+            labelPosition="outside"
+            labelOrientation="horizontal"
+            labelPadding={16}
+            labelTextColor={{ from: "color", modifiers: [["darker", 1.2]] }}
+          />
+        </ChartContainer>
+      </div>
     </div>
   );
 };
