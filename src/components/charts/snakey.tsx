@@ -1,3 +1,4 @@
+// app/components/SnakeyGraph.tsx
 import { TrendingUp } from "lucide-react";
 
 import {
@@ -8,20 +9,18 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ChartConfig, ChartContainer } from "@/components/ui/chart";
-import { GetSankeyData } from "@/app/api/synchrony-data-analytics";
 import SankeyClientWrapper from "./snakey-wrapper";
-
-// Define a config object for ChartContainer
-const chartConfig: ChartConfig = {
-  sankey: {
-    label: "Sankey Flow",
-    color: "hsl(var(--chart-1))",
-  },
-};
+import { getSankeyData } from "@/app/lib/dynamodb";
 
 export async function SnakeyGraph() {
-  const sankeyData = await GetSankeyData();
+  const defaultStartDate = new Date("2025-02-01T00:00:00");
+  const defaultEndDate = new Date("2025-02-15T00:00:00");
+
+  const initialSankeyData = await getSankeyData(
+    defaultStartDate.toISOString().split("T")[0],
+    defaultEndDate.toISOString().split("T")[0],
+  );
+
   return (
     <Card>
       <CardHeader>
@@ -29,9 +28,12 @@ export async function SnakeyGraph() {
         <CardDescription>Synchrony Traffic Flow</CardDescription>
       </CardHeader>
       <CardContent className="">
-        <ChartContainer config={chartConfig}>
-          <SankeyClientWrapper data={sankeyData} />
-        </ChartContainer>
+        <SankeyClientWrapper
+          initialDateRange={[
+            { startDate: defaultStartDate, endDate: defaultEndDate },
+          ]}
+          initialData={initialSankeyData}
+        />{" "}
       </CardContent>
       <CardFooter className="flex-col items-start gap-2 text-sm">
         <div className="flex gap-2 font-medium leading-none">

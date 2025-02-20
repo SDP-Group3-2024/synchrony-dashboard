@@ -20,12 +20,9 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { GetEvents } from "../api/synchrony-data-analytics";
+import { getEvents } from "@/app/lib/dynamodb";
 
 export default async function Page() {
-  const events = await GetEvents("page_exit");
-  console.log(events);
-
   return (
     <SidebarProvider>
       <AppSidebar />
