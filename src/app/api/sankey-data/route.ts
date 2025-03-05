@@ -1,6 +1,6 @@
 // app/api/sankey-data/route.ts
 import { NextResponse } from "next/server";
-import { getSankeyData } from "@/app/lib/dynamodb"; // Your server-side data fetching function
+import { getSankeyData } from "@/app/lib/dynamodb";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
