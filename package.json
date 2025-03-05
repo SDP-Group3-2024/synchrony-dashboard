@@ -9,7 +9,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.750.0",
     "@aws-sdk/util-dynamodb": "^3.750.0",
     "@nivo/sankey": "^0.88.0",
     "@radix-ui/react-collapsible": "^1.1.1",
@@ -25,6 +24,7 @@
     "dotenv": "^16.4.7",
     "init": "^0.1.2",
     "lucide-react": "^0.461.0",
+    "mongodb": "^6.14.2",
     "next": "^15.1.6",
     "react": "^18",
     "react-date-range": "^2.0.1",
