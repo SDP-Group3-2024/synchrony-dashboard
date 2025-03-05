@@ -9,7 +9,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@aws-sdk/util-dynamodb": "^3.750.0",
     "@nivo/sankey": "^0.88.0",
     "@radix-ui/react-collapsible": "^1.1.1",
     "@radix-ui/react-dialog": "^1.1.2",
