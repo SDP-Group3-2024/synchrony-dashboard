@@ -126,7 +126,6 @@ export async function getSankeyData(
         nodes: nodes,
         links: aggregatedData,
       };
-      console.log(formattedData);
       return formattedData;
     } else {
       return { nodes: [], links: [] };

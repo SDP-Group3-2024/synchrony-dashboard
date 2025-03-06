@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import SankeyClientWrapper from "./snakey-wrapper";
-import { getSankeyData } from "@/app/lib/dynamodb";
+import { getSankeyData } from "@/app/lib/mongo";
 
 export async function SnakeyGraph() {
   const defaultStartDate = new Date("2025-02-01T00:00:00");
