@@ -1,10 +1,10 @@
-import * as React from "react"
-import { GalleryVerticalEnd, Minus, Plus } from "lucide-react"
+import * as React from "react";
+import { GalleryVerticalEnd, Minus, Plus } from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+} from "@/components/ui/collapsible";
 import {
   Sidebar,
   SidebarContent,
@@ -17,38 +17,27 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarRail,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
-// This is sample data.
+// Navigation data
 const data = {
   navMain: [
     {
-      title: "Demo",
+      title: "Analytics",
       url: "#",
       items: [
         {
           title: "Dashboard",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Test",
-      url: "#",
-      items: [
-        {
-          title: "Nested 1",
-          url: "#",
+          url: "/dashboard",
         },
         {
-          title: "Nested 2",
-          url: "#",
-          isActive: true,
+          title: "Scroll Analytics",
+          url: "/scroll-analytics",
         },
       ],
     },
   ],
-}
+};
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
@@ -111,5 +100,5 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }
