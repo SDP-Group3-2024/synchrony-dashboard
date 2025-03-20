@@ -27,29 +27,34 @@ function formatTimestamp(timestamp) {
   }
 }
 
-export default function UserJourneyTable() {
-  const [sessionId, setSessionId] = useState('');
+export default function UserActivityTable() {
+  const [userId, setUserId] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
-  //const [error, setError] = useState<null | string>(() => null);
+  const [error, setError] = useState<null | string>(null);
 
-
-  const fetchData = async () => {
-    if (!sessionId.trim()) {
-      setError('Session ID cannot be empty.');
+  const fetchUserData = async () => {
+    if (!userId.trim()) {
+      setError('User ID cannot be empty.');
       return;
     }
     setError(null);
     setLoading(true);
 
     try {
-      const response = await fetch(`https://kyoh9ri6zj.execute-api.us-east-1.amazonaws.com/dev/analytics?session_id=${sessionId}`);
-      if (!response.ok) throw new Error('Failed to fetch data');
-
+      const response = await fetch(
+        `https://your-api-endpoint.com/user-activities?user_id=${encodeURIComponent(userId)}`
+      );
+      
+      if (!response.ok) throw new Error('Failed to fetch user data');
       const data = await response.json();
-      setResults(data.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()));
+      
+      // Sort by timestamp descending (newest first)
+      setResults(data.sort((a, b) => 
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      ));
     } catch (error) {
-      setError('Error fetching data. Please try again.');
+      setError('Error fetching user data. Please try again.');
       console.error('Fetch error:', error);
     } finally {
       setLoading(false);
@@ -57,53 +62,60 @@ export default function UserJourneyTable() {
   };
 
   return (
-    // <div className="p-6 bg-white dark:bg-gray-900 rounded-lg shadow-lg">
-   <Card>
-
+    <Card>
       <CardHeader>
-        <CardTitle>User Journey Table</CardTitle>
-        {/* <CardDescription>lorem ipsum</CardDescription> */}
+        <CardTitle>User Activity Explorer</CardTitle>
       </CardHeader>
 
-    <CardContent>
-      <div>
-          <div className="flex items-center gap-4 mb-4">
+      <CardContent>
+        <div className="space-y-4">
+          <div className="flex items-center gap-4">
             <Input
               type="text"
-              placeholder="Enter Session ID"
-              value={sessionId}
-              onChange={(e) => setSessionId(e.target.value)}
-              className="w-64 border-gray-300 dark:border-gray-700"
-              />
-            <Button onClick={fetchData} disabled={loading} variant="default">
-              {loading ? 'Loading...' : 'Query Database'}
+              placeholder="Enter User ID"
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
+              className="w-64"
+            />
+            <Button 
+              onClick={fetchUserData} 
+              disabled={loading}
+              variant="default"
+            >
+              {loading ? 'Loading...' : 'Search User'}
             </Button>
           </div>
 
-          
+          {error && (
+            <div className="text-red-500 text-sm">{error}</div>
+          )}
 
           <div className="overflow-x-auto">
-            <Table className="w-full border border-gray-200 dark:border-gray-700 rounded-md">
-              <TableHeader className="bg-gray-100 dark:bg-gray-800">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableHead className="w-1/3 px-4 py-2 text-left text-gray-800 dark:text-gray-200">Timestamp</TableHead>
-                  <TableHead className="w-1/3 px-4 py-2 text-left text-gray-800 dark:text-gray-200">Event Type</TableHead>
-                  <TableHead className="w-1/3 px-4 py-2 text-left text-gray-800 dark:text-gray-200">Page</TableHead>
+                  <TableHead>Timestamp</TableHead>
+                  <TableHead>Activity</TableHead>
+                  <TableHead>Event Type</TableHead>
+                  <TableHead>Details</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {results.length > 0 ? (
                   results.map((event, index) => (
-                    <TableRow key={index} className="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all">
-                      <TableCell className="px-4 py-2">{formatTimestamp(event.timestamp)}</TableCell>
-                      <TableCell className="px-4 py-2">{event.event_type}</TableCell>
-                      <TableCell className="px-4 py-2">{event.page}</TableCell>
+                    <TableRow key={index}>
+                      <TableCell>{formatTimestamp(event.timestamp)}</TableCell>
+                      <TableCell>{event.activity}</TableCell>
+                      <TableCell>{event.event_type}</TableCell>
+                      <TableCell className="max-w-[200px] truncate">
+                        {event.metadata}
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={3} className="px-4 py-4 text-center text-gray-500 dark:text-gray-400">
-                      No data available
+                    <TableCell colSpan={4} className="text-center">
+                      {loading ? 'Loading data...' : 'No user activity found'}
                     </TableCell>
                   </TableRow>
                 )}
