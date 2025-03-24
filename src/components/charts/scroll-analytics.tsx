@@ -38,60 +38,66 @@ export const ScrollAnalytics = ({
 }) => {
   // Ensure we have valid data to work with
   const safeInitialData = Array.isArray(initialData) ? initialData : [];
-  
+
   // Generate sample data if we don't have any
   const sampleData: ScrollEvent[] = Array.from({ length: 20 }).map((_, i) => ({
     _id: `sample-${i}`,
     event_type: "scroll",
     session_id: `session-${i % 5}`,
     timestamp: Math.floor(Date.now() / 1000) - i * 3600,
-    page_url: `http://example.com/${['home', 'about', 'products', 'blog', 'contact'][i % 5]}`,
-    page_path: `/${['home', 'about', 'products', 'blog', 'contact'][i % 5]}`,
-    page_title: ['Home Page', 'About Us', 'Products', 'Blog', 'Contact Us'][i % 5],
+    page_url: `http://example.com/${["home", "about", "products", "blog", "contact"][i % 5]}`,
+    page_path: `/${["home", "about", "products", "blog", "contact"][i % 5]}`,
+    page_title: ["Home Page", "About Us", "Products", "Blog", "Contact Us"][
+      i % 5
+    ],
     scroll_depth: Math.floor(Math.random() * 100),
-    scroll_direction: i % 3 === 0 ? 'up' : 'down',
+    scroll_direction: i % 3 === 0 ? "up" : "down",
     viewport_height: 700 + Math.floor(Math.random() * 300),
     document_height: 1500 + Math.floor(Math.random() * 500),
     event_id: `event-${i}`,
     user_ip: "127.0.0.1",
-    user_agent: "Mozilla/5.0"
+    user_agent: "Mozilla/5.0",
   }));
-  
+
   const [data, setData] = useState<ScrollEvent[]>(
-    safeInitialData.length > 0 ? safeInitialData : sampleData
+    safeInitialData.length > 0 ? safeInitialData : sampleData,
   );
   const [pageFilter, setPageFilter] = useState<string>("all");
   const [timeRange, setTimeRange] = useState<string>("all");
 
   // Calculate key metrics from the data (with safety checks)
-  const averageScrollDepth = data.length > 0
-    ? data.reduce((acc, curr) => acc + curr.scroll_depth, 0) / data.length
-    : 0;
-  const maxScrollDepth = data.length > 0
-    ? Math.max(...data.map((item) => item.scroll_depth))
-    : 0;
+  const averageScrollDepth =
+    data.length > 0
+      ? data.reduce((acc, curr) => acc + curr.scroll_depth, 0) / data.length
+      : 0;
+  const maxScrollDepth =
+    data.length > 0 ? Math.max(...data.map((item) => item.scroll_depth)) : 0;
   const downScrolls = data.filter(
     (item) => item.scroll_direction === "down",
   ).length;
   const upScrolls = data.filter(
     (item) => item.scroll_direction === "up",
   ).length;
-  const scrollRatio = (downScrolls + upScrolls) > 0
-    ? (downScrolls / (downScrolls + upScrolls)) * 100
-    : 50;
+  const scrollRatio =
+    downScrolls + upScrolls > 0
+      ? (downScrolls / (downScrolls + upScrolls)) * 100
+      : 50;
 
   // Get unique pages with safety check
-  const uniquePages = data.length > 0 
-    ? Array.from(new Set(data.map((item) => item.page_title)))
-    : ['Home Page', 'About Us', 'Products', 'Blog', 'Contact Us'];
+  const uniquePages =
+    data.length > 0
+      ? Array.from(new Set(data.map((item) => item.page_title)))
+      : ["Home Page", "About Us", "Products", "Blog", "Contact Us"];
 
   // Calculate average scroll depth by page with safety checks
   const scrollDepthByPage = uniquePages
     .map((page) => {
       const pageEvents = data.filter((event) => event.page_title === page);
-      const avgDepth = pageEvents.length > 0
-        ? pageEvents.reduce((acc, curr) => acc + curr.scroll_depth, 0) / pageEvents.length
-        : Math.floor(Math.random() * 50) + 20; // Fallback to random value for sample data
+      const avgDepth =
+        pageEvents.length > 0
+          ? pageEvents.reduce((acc, curr) => acc + curr.scroll_depth, 0) /
+            pageEvents.length
+          : Math.floor(Math.random() * 50) + 20; // Fallback to random value for sample data
       return {
         page,
         averageScrollDepth: avgDepth,
@@ -100,70 +106,79 @@ export const ScrollAnalytics = ({
     .sort((a, b) => b.averageScrollDepth - a.averageScrollDepth);
 
   // Scroll depth distribution data with safety check
-  const scrollDepthDistribution = data.length > 0
-    ? [
-        {
-          range: "0-25%",
-          count: data.filter((item) => item.scroll_depth <= 25).length,
-        },
-        {
-          range: "26-50%",
-          count: data.filter(
-            (item) => item.scroll_depth > 25 && item.scroll_depth <= 50,
-          ).length,
-        },
-        {
-          range: "51-75%",
-          count: data.filter(
-            (item) => item.scroll_depth > 50 && item.scroll_depth <= 75,
-          ).length,
-        },
-        {
-          range: "76-100%",
-          count: data.filter((item) => item.scroll_depth > 75).length,
-        },
-      ]
-    : [
-        { range: "0-25%", count: 5 },
-        { range: "26-50%", count: 8 },
-        { range: "51-75%", count: 4 },
-        { range: "76-100%", count: 3 },
-      ];
+  const scrollDepthDistribution =
+    data.length > 0
+      ? [
+          {
+            range: "0-25%",
+            count: data.filter((item) => item.scroll_depth <= 25).length,
+          },
+          {
+            range: "26-50%",
+            count: data.filter(
+              (item) => item.scroll_depth > 25 && item.scroll_depth <= 50,
+            ).length,
+          },
+          {
+            range: "51-75%",
+            count: data.filter(
+              (item) => item.scroll_depth > 50 && item.scroll_depth <= 75,
+            ).length,
+          },
+          {
+            range: "76-100%",
+            count: data.filter((item) => item.scroll_depth > 75).length,
+          },
+        ]
+      : [
+          { range: "0-25%", count: 5 },
+          { range: "26-50%", count: 8 },
+          { range: "51-75%", count: 4 },
+          { range: "76-100%", count: 3 },
+        ];
 
   // Scroll direction distribution data for pie chart with safety check
-  const scrollDirectionData = (downScrolls > 0 || upScrolls > 0)
-    ? [
-        { id: "Down Scrolls", label: "Down Scrolls", value: downScrolls || 1 },
-        { id: "Up Scrolls", label: "Up Scrolls", value: upScrolls || 1 },
-      ]
-    : [
-        { id: "Down Scrolls", label: "Down Scrolls", value: 12 },
-        { id: "Up Scrolls", label: "Up Scrolls", value: 8 },
-      ];
+  const scrollDirectionData =
+    downScrolls > 0 || upScrolls > 0
+      ? [
+          {
+            id: "Down Scrolls",
+            label: "Down Scrolls",
+            value: downScrolls || 1,
+          },
+          { id: "Up Scrolls", label: "Up Scrolls", value: upScrolls || 1 },
+        ]
+      : [
+          { id: "Down Scrolls", label: "Down Scrolls", value: 12 },
+          { id: "Up Scrolls", label: "Up Scrolls", value: 8 },
+        ];
 
   // Viewport ratio data with safety check
-  const viewportRatioData = data.length > 0 
-    ? data.map((item) => ({
-        id: item.event_id,
-        x: item.viewport_height,
-        y: Math.round((item.scroll_depth / 100) * item.document_height),
-        page: item.page_title,
-        viewportRatio: Math.round(
-          (item.viewport_height / item.document_height) * 100,
-        ),
-      }))
-    : Array.from({ length: 20 }).map((_, i) => {
-        const vh = 700 + Math.floor(Math.random() * 300);
-        const dh = 1500 + Math.floor(Math.random() * 500);
-        const sd = Math.floor(Math.random() * 100);
-        return {
-          id: `sample-${i}`,
-          x: vh,
-          y: Math.round((sd / 100) * dh),
-          page: ['Home Page', 'About Us', 'Products', 'Blog', 'Contact Us'][i % 5],
-          viewportRatio: Math.round((vh / dh) * 100),
-        };
-      });
+  const viewportRatioData =
+    data.length > 0
+      ? data.map((item) => ({
+          id: item.event_id,
+          x: item.viewport_height,
+          y: Math.round((item.scroll_depth / 100) * item.document_height),
+          page: item.page_title,
+          viewportRatio: Math.round(
+            (item.viewport_height / item.document_height) * 100,
+          ),
+        }))
+      : Array.from({ length: 20 }).map((_, i) => {
+          const vh = 700 + Math.floor(Math.random() * 300);
+          const dh = 1500 + Math.floor(Math.random() * 500);
+          const sd = Math.floor(Math.random() * 100);
+          return {
+            id: `sample-${i}`,
+            x: vh,
+            y: Math.round((sd / 100) * dh),
+            page: ["Home Page", "About Us", "Products", "Blog", "Contact Us"][
+              i % 5
+            ],
+            viewportRatio: Math.round((vh / dh) * 100),
+          };
+        });
 
   // Scroll depth heatmap data by page and direction with safety check
   const heatmapData = uniquePages.map((page) => {
@@ -176,22 +191,26 @@ export const ScrollAnalytics = ({
         Up: Math.floor(Math.random() * 40) + 10,
       };
     }
-    
+
     const downData = pageData.filter((i) => i.scroll_direction === "down");
     const upData = pageData.filter((i) => i.scroll_direction === "up");
-    
+
     return {
       page,
-      Down: downData.length > 0
-        ? Math.round(
-            downData.reduce((acc, curr) => acc + curr.scroll_depth, 0) / downData.length
-          )
-        : Math.floor(Math.random() * 60) + 20,
-      Up: upData.length > 0
-        ? Math.round(
-            upData.reduce((acc, curr) => acc + curr.scroll_depth, 0) / upData.length
-          )
-        : Math.floor(Math.random() * 40) + 10,
+      Down:
+        downData.length > 0
+          ? Math.round(
+              downData.reduce((acc, curr) => acc + curr.scroll_depth, 0) /
+                downData.length,
+            )
+          : Math.floor(Math.random() * 60) + 20,
+      Up:
+        upData.length > 0
+          ? Math.round(
+              upData.reduce((acc, curr) => acc + curr.scroll_depth, 0) /
+                upData.length,
+            )
+          : Math.floor(Math.random() * 40) + 10,
     };
   });
 
@@ -384,54 +403,7 @@ export const ScrollAnalytics = ({
         </CardContent>
       </Card>
 
-      <Card className="col-span-1">
-        <CardHeader>
-          <CardTitle>Viewport vs. Content Height</CardTitle>
-          <CardDescription>
-            Relationship between viewport and content
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="h-80">
-          <ResponsiveScatterPlot
-            data={[
-              {
-                id: "viewport-ratio",
-                data: viewportRatioData.map(({ id, x, y }) => ({ id, x, y })),
-              },
-            ]}
-            margin={{ top: 20, right: 20, bottom: 60, left: 80 }}
-            xScale={{ type: "linear", min: 0, max: "auto" }}
-            yScale={{ type: "linear", min: 0, max: "auto" }}
-            xFormat=">-.2f"
-            yFormat=">-.2f"
-            axisTop={null}
-            axisRight={null}
-            axisBottom={{
-              tickSize: 5,
-              tickPadding: 5,
-              tickRotation: 0,
-              legend: "Viewport Height (px)",
-              legendPosition: "middle",
-              legendOffset: 46,
-            }}
-            axisLeft={{
-              tickSize: 5,
-              tickPadding: 5,
-              tickRotation: 0,
-              legend: "Scrolled Content (px)",
-              legendPosition: "middle",
-              legendOffset: -60,
-            }}
-            colors={["#3b82f6"]}
-            blendMode="multiply"
-            nodeSize={8}
-            nodeBorderWidth={1}
-            nodeBorderColor={{ from: "color", modifiers: [["darker", 0.8]] }}
-          />
-        </CardContent>
-      </Card>
-
-      <Card className="col-span-1">
+      <Card className="col-span-2">
         <CardHeader>
           <CardTitle>Scroll Depth by Direction</CardTitle>
           <CardDescription>
@@ -457,7 +429,7 @@ export const ScrollAnalytics = ({
                 color: "#38bcb2",
                 size: 4,
                 padding: 1,
-                stagger: true
+                stagger: true,
               },
               {
                 id: "lines",
@@ -466,8 +438,8 @@ export const ScrollAnalytics = ({
                 color: "#eed312",
                 rotation: -45,
                 lineWidth: 6,
-                spacing: 10
-              }
+                spacing: 10,
+              },
             ]}
             axisTop={null}
             axisRight={null}
@@ -477,7 +449,7 @@ export const ScrollAnalytics = ({
               tickRotation: 0,
               legend: "Page",
               legendPosition: "middle",
-              legendOffset: 32
+              legendOffset: 32,
             }}
             axisLeft={{
               tickSize: 5,
@@ -485,13 +457,13 @@ export const ScrollAnalytics = ({
               tickRotation: 0,
               legend: "Scroll Depth (%)",
               legendPosition: "middle",
-              legendOffset: -40
+              legendOffset: -40,
             }}
             labelSkipWidth={12}
             labelSkipHeight={12}
             labelTextColor={{
               from: "color",
-              modifiers: [["darker", 1.6]]
+              modifiers: [["darker", 1.6]],
             }}
             legends={[
               {
@@ -511,11 +483,11 @@ export const ScrollAnalytics = ({
                   {
                     on: "hover",
                     style: {
-                      itemOpacity: 1
-                    }
-                  }
-                ]
-              }
+                      itemOpacity: 1,
+                    },
+                  },
+                ],
+              },
             ]}
             animate={true}
             motionStiffness={90}
