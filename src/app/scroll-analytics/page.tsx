@@ -1,5 +1,4 @@
 import { AppSidebar } from "@/components/app-sidebar";
-import { SnakeyGraph } from "@/components/charts/snakey";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -13,8 +12,26 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import ScrollAnalyticsWrapper from "@/components/charts/scroll-analytics-wrapper";
+import { getScrollEvents } from "@/app/lib/mongo";
+import { ScrollEvent } from "@/app/lib/types";
+
+// Fetch scroll data from MongoDB
+async function getScrollData(): Promise<ScrollEvent[]> {
+  try {
+    // Get the most recent scroll events (limit to 100 for performance)
+    const data = await getScrollEvents(undefined, undefined, 100);
+    console.log(data);
+    return JSON.parse(JSON.stringify(data)) as ScrollEvent[];
+  } catch (error) {
+    console.error("Failed to fetch scroll data:", error);
+    return [];
+  }
+}
 
 export default async function Page() {
+  const scrollData = await getScrollData();
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -32,7 +49,7 @@ export default async function Page() {
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>Dashboard</BreadcrumbPage>
+                <BreadcrumbPage>Scroll Analytics</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -40,11 +57,11 @@ export default async function Page() {
         {/* Main Content Grid */}
         <div className="flex flex-1 flex-col gap-4 p-4">
           <div className="col-span-full w-full">
-            <SnakeyGraph />
+            <h1 className="text-2xl font-bold mb-4">
+              Scroll Behavior Analytics
+            </h1>
+            <ScrollAnalyticsWrapper initialData={scrollData} />
           </div>
-
-          {/* Additional Space for Future Content */}
-          <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/75 md:min-h-min" />
         </div>
       </SidebarInset>
     </SidebarProvider>

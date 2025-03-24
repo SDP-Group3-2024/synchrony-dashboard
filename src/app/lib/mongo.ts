@@ -1,14 +1,15 @@
 "use server";
 import { MongoClient } from "mongodb";
-import { PageExitEvent, SankeyChartProps } from "./types";
+import { PageExitEvent, SankeyChartProps, ScrollEvent } from "./types";
 
 // Load environment variables
 const MONGODB_URI = process.env.MONGODB_URI;
 const MONGODB_DB_NAME = process.env.MONGODB_DB_NAME;
 const EVENTS_COLLECTION = "UserInteractionEvents"; // Collection name for events
 const SANKEY_COLLECTION = "SankeyData"; // Collection name for sankey data
+const SCROLL_COLLECTION = "ScrollEvents"; // Collection name for scroll events
 
-// MongoDB connection setup
+// MongoDB connection setup for server components
 let cachedClient: MongoClient | null = null;
 
 async function connectToDatabase() {
@@ -50,6 +51,43 @@ export async function getEvents(eventType: string): Promise<PageExitEvent[]> {
     return items as PageExitEvent[];
   } catch (error: unknown) {
     console.error("Error fetching events from MongoDB:", error);
+    return [];
+  }
+}
+
+export async function getScrollEvents(
+  startDate?: string,
+  endDate?: string,
+  limit: number = 100,
+): Promise<ScrollEvent[]> {
+  try {
+    const client = await connectToDatabase();
+    const db = client.db(MONGODB_DB_NAME);
+    const collection = db.collection(SCROLL_COLLECTION);
+
+    // Create query object based on date parameters
+    const query: any = { event_type: "scroll" };
+    if (startDate && endDate) {
+      // Convert dates to timestamps if needed
+      const startTimestamp = Math.floor(new Date(startDate).getTime() / 1000);
+      const endTimestamp = Math.floor(new Date(endDate).getTime() / 1000);
+
+      query.timestamp = {
+        $gte: startTimestamp,
+        $lte: endTimestamp,
+      };
+    }
+
+    // Query MongoDB for scroll events
+    const items = await collection
+      .find(query)
+      .sort({ timestamp: -1 })
+      .limit(limit)
+      .toArray();
+
+    return items as ScrollEvent[];
+  } catch (error) {
+    console.error("Error fetching scroll events from MongoDB:", error);
     return [];
   }
 }
@@ -126,7 +164,6 @@ export async function getSankeyData(
         nodes: nodes,
         links: aggregatedData,
       };
-      console.log(formattedData);
       return formattedData;
     } else {
       return { nodes: [], links: [] };
