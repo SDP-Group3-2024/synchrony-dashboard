@@ -1,4 +1,4 @@
-"use server";
+"server-only";
 import { MongoClient } from "mongodb";
 import { PageExitEvent, SankeyChartProps, ScrollEvent } from "./types";
 
@@ -48,49 +48,74 @@ export async function getEvents(eventType: string): Promise<PageExitEvent[]> {
       .toArray();
 
     // MongoDB already returns JSON objects, so no need for unmarshalling
-    return items as PageExitEvent[];
+    return items as unknown as PageExitEvent[];
   } catch (error: unknown) {
     console.error("Error fetching events from MongoDB:", error);
     return [];
   }
 }
 
+export interface ScrollEventQuery {
+  startDate?: string;
+  endDate?: string;
+  pagePath?: string;
+  limit: number;
+}
+
+// Define a proper type for MongoDB query with timestamp range
+interface TimestampRange {
+  $gte: number;
+  $lte: number;
+}
+
+interface MongoScrollQuery {
+  event_type: string;
+  timestamp?: TimestampRange;
+  page_path?: string;
+}
+
 export async function getScrollEvents(
-  startDate?: string,
-  endDate?: string,
-  limit: number = 100,
+  query: ScrollEventQuery,
 ): Promise<ScrollEvent[]> {
   try {
+    const { startDate, endDate, pagePath, limit } = query;
     const client = await connectToDatabase();
     const db = client.db(MONGODB_DB_NAME);
     const collection = db.collection(SCROLL_COLLECTION);
 
     // Create query object based on date parameters
-    const query: any = { event_type: "scroll" };
+    const mongoQuery: MongoScrollQuery = { event_type: "scroll" };
+    
     if (startDate && endDate) {
       // Convert dates to timestamps if needed
       const startTimestamp = Math.floor(new Date(startDate).getTime() / 1000);
       const endTimestamp = Math.floor(new Date(endDate).getTime() / 1000);
 
-      query.timestamp = {
+      mongoQuery.timestamp = {
         $gte: startTimestamp,
         $lte: endTimestamp,
       };
     }
+    
+    if (pagePath) {
+      mongoQuery.page_path = pagePath;
+    }
 
     // Query MongoDB for scroll events
     const items = await collection
-      .find(query)
+      .find(mongoQuery)
       .sort({ timestamp: -1 })
       .limit(limit)
       .toArray();
 
-    return items as ScrollEvent[];
+    // Properly type the return value
+    return items as unknown as ScrollEvent[];
   } catch (error) {
     console.error("Error fetching scroll events from MongoDB:", error);
     return [];
   }
 }
+
 
 export async function getSankeyData(
   startDate: string,
