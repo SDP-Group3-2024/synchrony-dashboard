@@ -1,60 +1,68 @@
-import { AppSidebar } from '@/components/app-sidebar';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
 import { getScrollEvents } from '@/app/lib/mongo';
 import { ScrollEvent } from '@/app/lib/types';
 import PageAnalyticsClient from './page-client';
 
+// Get date range for last month (last 30 days)
+function getLastMonthDateRange(): { startDate: string; endDate: string } {
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - 30);
+
+  // Format as YYYY-MM-DD
+  return {
+    startDate: startDate.toISOString().split('T')[0],
+    endDate: endDate.toISOString().split('T')[0],
+  };
+}
+
 // Parse the slug to extract page path and date range
 function parseSlug(slug: string[]): {
   pagePath: string;
-  startDate?: string;
-  endDate?: string;
+  startDate: string;
+  endDate: string;
 } {
-  console.log('slug', slug);
+  console.log('slug array:', slug);
 
+  // Get the page path, convert %20root to /
+  const pagePath = slug[0] === '%20root' ? '/' : `/${slug[0]}`;
+
+  // If only page path is provided, use last month as default date range
   if (slug.length === 1) {
-    return { pagePath: slug[0] };
-  }
-
-  if (slug.length === 3) {
+    const { startDate, endDate } = getLastMonthDateRange();
     return {
-      pagePath: slug[0],
-      startDate: slug[1],
-      endDate: slug[2],
+      pagePath,
+      startDate,
+      endDate,
     };
   }
 
-  return { pagePath: slug[0] };
+  // If all parameters are provided, use them
+  return {
+    pagePath,
+    startDate: slug[1],
+    endDate: slug[2],
+  };
 }
 
 // Fetch scroll data from MongoDB for a specific page and date range
 async function getScrollData(slug: string[]): Promise<ScrollEvent[]> {
   try {
     const { pagePath, startDate, endDate } = parseSlug(slug);
-    console.log('pagePath', pagePath);
-    console.log('startDate', startDate);
-    console.log('endDate', endDate);
+    console.log('Fetching data for path:', pagePath);
+    console.log('Date range:', startDate, 'to', endDate);
 
-    // Get scroll events with date range if provided
-    const data = await getScrollEvents({ startDate, endDate, pagePath, limit: 100 });
+    // Get scroll events with date range
+    const data = await getScrollEvents({
+      startDate,
+      endDate,
+      pagePath,
+      limit: 100,
+    });
+
     console.log('MongoDB data count:', data.length);
 
-    // Filter events for the specific page
-    const pageEvents = data.filter(
-      (event) => event.page_path === `/${pagePath}` || event.page_path === pagePath,
-    );
-
-    console.log('Filtered events count:', pageEvents.length);
-
-    // If no events found, return some test data for development
-    if (pageEvents.length === 0) {
+    // If no events found, return test data
+    if (data.length === 0) {
       console.log('No events found, returning test data');
       return [
         {
@@ -62,8 +70,8 @@ async function getScrollData(slug: string[]): Promise<ScrollEvent[]> {
           event_type: 'scroll',
           session_id: 'test-session',
           timestamp: Date.now() / 1000,
-          page_url: `https://example.com/${pagePath}`,
-          page_path: `/${pagePath}`,
+          page_url: `https://example.com${pagePath}`,
+          page_path: pagePath,
           page_title: `Test Page for ${pagePath}`,
           scroll_depth: 50,
           scroll_direction: 'down',
@@ -76,7 +84,7 @@ async function getScrollData(slug: string[]): Promise<ScrollEvent[]> {
       ];
     }
 
-    return JSON.parse(JSON.stringify(pageEvents)) as ScrollEvent[];
+    return JSON.parse(JSON.stringify(data)) as ScrollEvent[];
   } catch (error) {
     console.error('Failed to fetch scroll data:', error);
     // Return test data for error cases
@@ -102,8 +110,36 @@ async function getScrollData(slug: string[]): Promise<ScrollEvent[]> {
 }
 
 export default async function Page({ params }: { params: { slug: string[] } }) {
-  await params;
-  console.log('params', params);
+  console.log('Page component called with params:', params);
+
+  // Validate we have at least the page path parameter
+  if (!params.slug || params.slug.length === 0) {
+    return (
+      <div className="p-8 text-center">
+        <h1 className="text-2xl font-bold mb-4">Invalid URL Format</h1>
+        <p>
+          Expected format: /page-analytics/[page-path] or
+          /page-analytics/[page-path]/[start-date]/[end-date]
+        </p>
+        <p className="mt-2 text-sm">Use &quot;%20root&quot; to represent the root path.</p>
+      </div>
+    );
+  }
+
+  // Also validate if we have 2 parameters (which is invalid - we need either 1 or 3)
+  if (params.slug.length === 2) {
+    return (
+      <div className="p-8 text-center">
+        <h1 className="text-2xl font-bold mb-4">Invalid URL Format</h1>
+        <p>
+          Expected format: /page-analytics/[page-path] or
+          /page-analytics/[page-path]/[start-date]/[end-date]
+        </p>
+        <p className="mt-2 text-sm">You provided 2 parameters which is ambiguous.</p>
+      </div>
+    );
+  }
+
   const scrollData = await getScrollData(params.slug);
 
   // If no data is found for this page, show a message
@@ -119,12 +155,9 @@ export default async function Page({ params }: { params: { slug: string[] } }) {
   const uniquePages = Array.from(new Set(scrollData.map((event) => event.page_title)));
 
   // Format the date range for display
-  const dateRangeText =
-    startDate && endDate
-      ? ` (${new Date(startDate).toLocaleDateString()} - ${new Date(
-          endDate,
-        ).toLocaleDateString()})`
-      : '';
+  const dateRangeText = ` (${new Date(startDate).toLocaleDateString()} - ${new Date(
+    endDate,
+  ).toLocaleDateString()})`;
 
   return (
     <PageAnalyticsClient
@@ -133,7 +166,7 @@ export default async function Page({ params }: { params: { slug: string[] } }) {
       pagePath={pagePath}
       dateRangeText={dateRangeText}
       uniquePages={uniquePages}
-      dateRange={startDate && endDate ? { startDate, endDate } : undefined}
+      dateRange={{ startDate, endDate }}
     />
   );
 }

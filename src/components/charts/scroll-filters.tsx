@@ -66,7 +66,9 @@ export function ScrollFilters({
   const updateUrl = (page: string, startDate: Date, endDate: Date) => {
     const startDateStr = format(startDate, 'yyyy-MM-dd');
     const endDateStr = format(endDate, 'yyyy-MM-dd');
-    const newPath = `/${page}/${startDateStr}/${endDateStr}`;
+    const newPath = `/page-analytics/${page}/${startDateStr}/${endDateStr}`;
+    console.log('newPath', newPath);
+
     router.push(newPath);
   };
 

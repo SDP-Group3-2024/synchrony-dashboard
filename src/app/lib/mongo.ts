@@ -64,8 +64,8 @@ export interface ScrollEventQuery {
 
 // Define a proper type for MongoDB query with timestamp range
 interface TimestampRange {
-  $gte: number;
-  $lte: number;
+  $gte: string;
+  $lte: string;
 }
 
 interface MongoScrollQuery {
@@ -87,19 +87,21 @@ export async function getScrollEvents(
     const mongoQuery: MongoScrollQuery = { event_type: "scroll" };
     
     if (startDate && endDate) {
-      // Convert dates to timestamps if needed
-      const startTimestamp = Math.floor(new Date(startDate).getTime() / 1000);
-      const endTimestamp = Math.floor(new Date(endDate).getTime() / 1000);
+      // Convert to ISO date strings to match the format in the database
+      const startISOString = new Date(startDate).toISOString();
+      const endISOString = new Date(endDate).toISOString();
 
       mongoQuery.timestamp = {
-        $gte: startTimestamp,
-        $lte: endTimestamp,
+        $gte: startISOString,
+        $lte: endISOString,
       };
     }
     
     if (pagePath) {
       mongoQuery.page_path = pagePath;
     }
+
+    console.log("MongoDB query:", JSON.stringify(mongoQuery, null, 2));
 
     // Query MongoDB for scroll events
     const items = await collection
@@ -108,6 +110,8 @@ export async function getScrollEvents(
       .limit(limit)
       .toArray();
 
+    console.log(`Found ${items.length} scroll events`);
+    
     // Properly type the return value
     return items as unknown as ScrollEvent[];
   } catch (error) {
@@ -115,6 +119,7 @@ export async function getScrollEvents(
     return [];
   }
 }
+
 
 
 export async function getSankeyData(
