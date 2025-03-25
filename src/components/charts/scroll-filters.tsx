@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Button } from '../ui/button';
 import { DateRange } from 'react-date-range';
 import { format } from 'date-fns';
-import { CalendarIcon, Loader2 } from 'lucide-react';
+import { CalendarIcon } from 'lucide-react';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 import {
@@ -31,7 +31,6 @@ export function ScrollFilters({
   uniquePages,
 }: ScrollFiltersProps) {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [pageFilter, setPageFilter] = useState<string>(pagePath);
 
@@ -143,10 +142,6 @@ export function ScrollFilters({
             ))}
           </SelectContent>
         </Select>
-      </div>
-
-      <div className="flex items-center gap-2">
-        {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
       </div>
     </div>
   );
