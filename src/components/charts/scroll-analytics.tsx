@@ -186,48 +186,6 @@ export function ScrollAnalytics({ data, dateRange }: ScrollAnalyticsProps) {
       </div>
 
       {/* Charts */}
-      <Card className="col-span-2">
-        <CardHeader>
-          <CardTitle>Scroll Depth by Page</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[300px]">
-            <ResponsiveBar
-              data={chartData.scrollDepthByPage}
-              keys={['averageScrollDepth']}
-              indexBy="page"
-              margin={{ top: 50, right: 50, bottom: 50, left: 60 }}
-              padding={0.3}
-              valueScale={{ type: 'linear' }}
-              colors={{ scheme: 'nivo' }}
-              axisTop={null}
-              axisRight={null}
-              axisBottom={{
-                tickSize: 5,
-                tickPadding: 5,
-                tickRotation: -45,
-                legend: 'Page',
-                legendPosition: 'middle',
-                legendOffset: 45,
-              }}
-              axisLeft={{
-                tickSize: 5,
-                tickPadding: 5,
-                tickRotation: 0,
-                legend: 'Average Scroll Depth (%)',
-                legendPosition: 'middle',
-                legendOffset: -40,
-              }}
-              labelSkipWidth={12}
-              labelSkipHeight={12}
-              labelTextColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
-              animate={true}
-              motionStiffness={90}
-              motionDamping={15}
-            />
-          </div>
-        </CardContent>
-      </Card>
 
       <Card>
         <CardHeader>

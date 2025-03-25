@@ -23,14 +23,11 @@ function parseSlug(slug: string[]): {
 } {
   console.log('slug array:', slug);
 
-  // Get the page path, convert %20root to /
-  const pagePath = slug[0] === '%20root' ? '/' : `/${slug[0]}`;
-
   // If only page path is provided, use last month as default date range
   if (slug.length === 1) {
     const { startDate, endDate } = getLastMonthDateRange();
     return {
-      pagePath,
+      pagePath: slug[0],
       startDate,
       endDate,
     };
@@ -38,24 +35,29 @@ function parseSlug(slug: string[]): {
 
   // If all parameters are provided, use them
   return {
-    pagePath,
+    pagePath: slug[0],
     startDate: slug[1],
     endDate: slug[2],
   };
 }
 
 // Fetch scroll data from MongoDB for a specific page and date range
-async function getScrollData(slug: string[]): Promise<ScrollEvent[]> {
+async function getScrollData(
+  pagePath: string,
+  startDate: string,
+  endDate: string,
+): Promise<ScrollEvent[]> {
   try {
-    const { pagePath, startDate, endDate } = parseSlug(slug);
-    console.log('Fetching data for path:', pagePath);
-    console.log('Date range:', startDate, 'to', endDate);
+    // if the page path is %20root, convert it to /
+    if (pagePath === '%20root') {
+      pagePath = '';
+    }
 
     // Get scroll events with date range
     const data = await getScrollEvents({
       startDate,
       endDate,
-      pagePath,
+      pagePath: '/' + pagePath,
       limit: 100,
     });
 
@@ -140,7 +142,8 @@ export default async function Page({ params }: { params: { slug: string[] } }) {
     );
   }
 
-  const scrollData = await getScrollData(params.slug);
+  const { pagePath, startDate, endDate } = parseSlug(params.slug);
+  const scrollData = await getScrollData(pagePath, startDate, endDate);
 
   // If no data is found for this page, show a message
   if (scrollData.length === 0) {
@@ -149,8 +152,6 @@ export default async function Page({ params }: { params: { slug: string[] } }) {
 
   // Get the page title from the first event
   const pageTitle = scrollData[0]?.page_title || 'Page Analytics';
-  const { pagePath, startDate, endDate } = parseSlug(params.slug);
-
   // Get unique pages for the filter
   const uniquePages = Array.from(new Set(scrollData.map((event) => event.page_title)));
 

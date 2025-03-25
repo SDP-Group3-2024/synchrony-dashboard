@@ -89,7 +89,10 @@ export async function getScrollEvents(
     if (startDate && endDate) {
       // Convert to ISO date strings to match the format in the database
       const startISOString = new Date(startDate).toISOString();
-      const endISOString = new Date(endDate).toISOString();
+      // Make the end date inclusive by setting it to the end of the day (23:59:59.999)
+      const endDateObj = new Date(endDate);
+      endDateObj.setDate(endDateObj.getDate() + 1);
+      const endISOString = endDateObj.toISOString();
 
       mongoQuery.timestamp = {
         $gte: startISOString,
