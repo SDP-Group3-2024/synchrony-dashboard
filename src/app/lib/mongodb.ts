@@ -1,8 +1,5 @@
+"server-only";
 import { MongoClient } from 'mongodb';
-
-// This file doesn't use "use server" because it's needed by API routes
-// It's a standard pattern for MongoDB connection in Next.js
-
 if (!process.env.MONGODB_URI) {
   throw new Error('Please add your Mongo URI to .env.local');
 }

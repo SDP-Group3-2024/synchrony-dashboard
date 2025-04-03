@@ -1,94 +1,200 @@
-"use server";
+"server-only";
 import { MongoClient } from "mongodb";
-import { PageExitEvent, SankeyChartProps, ScrollEvent } from "./types";
+import { EventType, SankeyChartProps, BaseEventData } from "./types";
 
 // Load environment variables
 const MONGODB_URI = process.env.MONGODB_URI;
 const MONGODB_DB_NAME = process.env.MONGODB_DB_NAME;
-const EVENTS_COLLECTION = "UserInteractionEvents"; // Collection name for events
-const SANKEY_COLLECTION = "SankeyData"; // Collection name for sankey data
-const SCROLL_COLLECTION = "ScrollEvents"; // Collection name for scroll events
+const SANKEY_COLLECTION = "SankeyData"; 
+const SCROLL_COLLECTION = "ScrollEvents";
+const CLICK_COLLECTION = "ClickEvents";
+const PAGE_EXIT_COLLECTION = "PageEvents";
+const PERFORMANCE_COLLECTION = "PerformanceEvents";
 
 // MongoDB connection setup for server components
 let cachedClient: MongoClient | null = null;
+let isConnecting = false;
 
 async function connectToDatabase() {
   if (cachedClient) {
-    return cachedClient;
+    try {
+      // Test if the connection is still alive
+      await cachedClient.db(MONGODB_DB_NAME).command({ ping: 1 });
+      return cachedClient;
+    } catch (error) {
+      console.log("Cached connection failed, creating new connection");
+      cachedClient = null;
+    }
   }
 
   if (!MONGODB_URI) {
     throw new Error("MONGODB_URI is not defined");
   }
 
+  if (isConnecting) {
+    // Wait for the existing connection attempt to complete
+    while (isConnecting) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    if (cachedClient) {
+      return cachedClient;
+    }
+  }
+
+  isConnecting = true;
   try {
-    const client = new MongoClient(MONGODB_URI);
+    const client = new MongoClient(MONGODB_URI, {
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+      connectTimeoutMS: 10000,
+    });
+
     await client.connect();
     cachedClient = client;
     return client;
   } catch (error) {
     console.error("Failed to connect to MongoDB:", error);
+    cachedClient = null;
     throw error;
+  } finally {
+    isConnecting = false;
   }
 }
 
-export async function getEvents(eventType: string): Promise<PageExitEvent[]> {
-  if (!eventType) {
-    return [];
-  }
-
-  try {
-    const client = await connectToDatabase();
-    const db = client.db(MONGODB_DB_NAME);
-    const collection = db.collection(EVENTS_COLLECTION);
-
-    // Query MongoDB for events of the specified type
-    const items = await collection
-      .find({ event_type: String(eventType) })
-      .toArray();
-
-    // MongoDB already returns JSON objects, so no need for unmarshalling
-    return items as PageExitEvent[];
-  } catch (error: unknown) {
-    console.error("Error fetching events from MongoDB:", error);
-    return [];
+// Add a cleanup function to properly close the connection
+export async function closeDatabaseConnection() {
+  if (cachedClient) {
+    try {
+      await cachedClient.close();
+      cachedClient = null;
+    } catch (error) {
+      console.error("Error closing MongoDB connection:", error);
+    }
   }
 }
 
-export async function getScrollEvents(
-  startDate?: string,
-  endDate?: string,
-  limit: number = 100,
-): Promise<ScrollEvent[]> {
+export interface EventQuery {
+  eventType: EventType;
+  startDate?: string;
+  endDate?: string;
+  pagePath?: string;
+  limit: number;
+}
+
+// Define a proper type for MongoDB query with timestamp range
+interface TimestampRange {
+  $gte: string;
+  $lte: string;
+}
+
+interface MongoEventQuery {
+  timestamp?: TimestampRange;
+  page_path?: string;
+}
+const eventCollectionMap: Record<string, string> = {
+  "scroll": SCROLL_COLLECTION,
+  "click": CLICK_COLLECTION,
+  "performance": PERFORMANCE_COLLECTION,
+  "page_exit": PAGE_EXIT_COLLECTION,
+}
+export async function getEvents<T extends BaseEventData>(
+  query: EventQuery,
+): Promise<T[]> {
   try {
+    const { startDate, endDate, pagePath, limit } = query;
     const client = await connectToDatabase();
     const db = client.db(MONGODB_DB_NAME);
-    const collection = db.collection(SCROLL_COLLECTION);
+    const collectionName = eventCollectionMap[query.eventType];
+    const collection = db.collection(collectionName);
 
     // Create query object based on date parameters
-    const query: any = { event_type: "scroll" };
+    const mongoQuery: MongoEventQuery = {  };
+    
     if (startDate && endDate) {
-      // Convert dates to timestamps if needed
-      const startTimestamp = Math.floor(new Date(startDate).getTime() / 1000);
-      const endTimestamp = Math.floor(new Date(endDate).getTime() / 1000);
-
-      query.timestamp = {
-        $gte: startTimestamp,
-        $lte: endTimestamp,
+      const { startISOString, endISOString } = convertToISOString(startDate, endDate);
+      mongoQuery.timestamp = {
+        $gte: startISOString,
+        $lte: endISOString,
       };
     }
+    
+    if (pagePath) {
+      mongoQuery.page_path = pagePath;
+    }
 
-    // Query MongoDB for scroll events
+    console.log("MongoDB query:", JSON.stringify(mongoQuery, null, 2));
+
     const items = await collection
-      .find(query)
+      .find(mongoQuery)
       .sort({ timestamp: -1 })
       .limit(limit)
       .toArray();
 
-    return items as ScrollEvent[];
+    console.log(`Found ${items.length} ${query.eventType} events`);
+    
+    return items as unknown as T[];
   } catch (error) {
-    console.error("Error fetching scroll events from MongoDB:", error);
+    console.error(`Error fetching ${query.eventType} events from MongoDB:`, error);
     return [];
+  }
+}
+
+// Counts unique sessions visiting a specific page within a date range using aggregation
+export async function getTotalPageVisitors(
+  startDate: string,
+  endDate: string,
+  pagePath: string,
+): Promise<number> {
+  let client: MongoClient | undefined;
+  try {
+    client = await connectToDatabase();
+    const db = client.db(MONGODB_DB_NAME);
+    const collection = db.collection(PERFORMANCE_COLLECTION);
+
+    // Convert input dates to Unix timestamps (seconds)
+    const { startISOString, endISOString } = convertToISOString(startDate, endDate);
+    // Define the aggregation pipeline with corrected field names and timestamp comparison
+    const pipeline = [
+      {
+        $match: {
+          timestamp: {
+            $gte: startISOString,
+            $lte: endISOString
+          },
+          page_path: pagePath,
+          session_id: { $exists: true, $ne: null } // Corrected field name: session_id
+        }
+      },
+      // Stage 2: Group by session_id to find unique sessions
+      {
+        $group: {
+          _id: '$session_id' // Corrected field name: session_id
+        }
+      },
+      // Stage 3: Count the number of unique groups (unique sessions)
+      {
+        $count: 'uniqueSessionCount'
+      }
+    ];
+
+
+    const result = await collection.aggregate(pipeline).toArray();
+
+    let count = 0;
+    if (result.length > 0) {
+      count = result[0].uniqueSessionCount;
+    }
+
+    return count;
+
+  } catch (error) {
+    console.error("Error counting unique page visitors via aggregation:", error);
+    return 0;
+  } finally {
+    if (client) {
+      await client.close();
+    }
   }
 }
 
@@ -172,4 +278,64 @@ export async function getSankeyData(
     console.error("Error querying data from MongoDB:", error);
     return { nodes: [], links: [] };
   }
+}
+
+// Get all unique page paths within a date range
+export async function getPagePaths(
+startDate: string,
+endDate: string,
+): Promise<string[]> {
+let client: MongoClient | undefined;
+try {
+  client = await connectToDatabase();
+  const db = client.db(MONGODB_DB_NAME);
+  const collection = db.collection(PERFORMANCE_COLLECTION);
+
+  // Convert input dates to Unix timestamps (seconds)
+  const { startISOString, endISOString } = convertToISOString(startDate, endDate);
+
+  // Define the date range query using seconds
+  const query = {
+    timestamp: { // Compare against the integer timestamp field
+      $gte: startISOString,       // Greater than or equal to start (seconds)
+      $lt: endISOString // Less than the start of the next day (seconds)
+    },
+  };
+
+  console.log("Query for distinct page paths:", JSON.stringify(query, null, 2));
+
+  // Use the distinct method
+  const distinctPagePaths = await collection.distinct('page_path', query);
+
+  if (!Array.isArray(distinctPagePaths)) {
+      console.error("MongoDB distinct query did not return an array.");
+      return [];
+  }
+
+  // Filter out any non-string values
+  const stringPaths = distinctPagePaths.filter(
+      (path): path is string => typeof path === 'string' && path !== null && path !== undefined
+  );
+
+  console.log("Distinct page paths found:", stringPaths);
+  return stringPaths;
+
+} catch (error) {
+  console.error("Error querying distinct page paths from MongoDB:", error);
+  return []; // Return empty array on error
+} finally {
+    if (client) {
+        await client.close();
+    }
+}
+}
+
+function convertToISOString(startDate: string, endDate: string): { startISOString: string, endISOString: string } {
+  // Convert to ISO date strings to match the format in the database
+  const startISOString = new Date(startDate).toISOString();
+  // Make the end date inclusive by setting it to the end of the day (23:59:59.999)
+  const endDateObj = new Date(endDate);
+  endDateObj.setDate(endDateObj.getDate() + 1);
+  const endISOString = endDateObj.toISOString();
+  return { startISOString, endISOString };
 }
