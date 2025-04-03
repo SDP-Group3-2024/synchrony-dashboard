@@ -9,26 +9,68 @@ const SANKEY_COLLECTION = "SankeyData";
 const SCROLL_COLLECTION = "ScrollEvents";
 const CLICK_COLLECTION = "ClickEvents";
 const PAGE_EXIT_COLLECTION = "PageEvents";
+const PERFORMANCE_COLLECTION = "PerformanceEvents";
+
 // MongoDB connection setup for server components
 let cachedClient: MongoClient | null = null;
+let isConnecting = false;
 
 async function connectToDatabase() {
   if (cachedClient) {
-    return cachedClient;
+    try {
+      // Test if the connection is still alive
+      await cachedClient.db(MONGODB_DB_NAME).command({ ping: 1 });
+      return cachedClient;
+    } catch (error) {
+      console.log("Cached connection failed, creating new connection");
+      cachedClient = null;
+    }
   }
 
   if (!MONGODB_URI) {
     throw new Error("MONGODB_URI is not defined");
   }
 
+  if (isConnecting) {
+    // Wait for the existing connection attempt to complete
+    while (isConnecting) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    if (cachedClient) {
+      return cachedClient;
+    }
+  }
+
+  isConnecting = true;
   try {
-    const client = new MongoClient(MONGODB_URI);
+    const client = new MongoClient(MONGODB_URI, {
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+      connectTimeoutMS: 10000,
+    });
+
     await client.connect();
     cachedClient = client;
     return client;
   } catch (error) {
     console.error("Failed to connect to MongoDB:", error);
+    cachedClient = null;
     throw error;
+  } finally {
+    isConnecting = false;
+  }
+}
+
+// Add a cleanup function to properly close the connection
+export async function closeDatabaseConnection() {
+  if (cachedClient) {
+    try {
+      await cachedClient.close();
+      cachedClient = null;
+    } catch (error) {
+      console.error("Error closing MongoDB connection:", error);
+    }
   }
 }
 
@@ -92,28 +134,64 @@ export async function getEvents<T extends BaseEventData>(
     return [];
   }
 }
-// TODO: Fix
+
+
+// Counts unique sessions visiting a specific page within a date range using aggregation
 export async function getTotalPageVisitors(
   startDate: string,
   endDate: string,
   pagePath: string,
 ): Promise<number> {
-  const client = await connectToDatabase();
-  const db = client.db(MONGODB_DB_NAME);
-  const collection = db.collection(PAGE_EXIT_COLLECTION);
-  const { startISOString, endISOString } = convertToISOString(startDate, endDate);
-  const query: MongoEventQuery = {
-    timestamp: {
-      $gte: startISOString,
-      $lte: endISOString,
-    },
-    page_path: pagePath,
-  };
-  console.log("Page event query:", JSON.stringify(query, null, 2));
-  const count = await collection
-    .countDocuments(query);
-  console.log("Total page visitors:", count);
-  return count;
+  let client: MongoClient | undefined;
+  try {
+    client = await connectToDatabase();
+    const db = client.db(MONGODB_DB_NAME);
+    const collection = db.collection(PERFORMANCE_COLLECTION);
+
+    // Convert input dates to Unix timestamps (seconds)
+    const { startISOString, endISOString } = convertToISOString(startDate, endDate);
+    // Define the aggregation pipeline with corrected field names and timestamp comparison
+    const pipeline = [
+      {
+        $match: {
+          timestamp: {
+            $gte: startISOString,
+            $lte: endISOString
+          },
+          page_path: pagePath,
+          session_id: { $exists: true, $ne: null } // Corrected field name: session_id
+        }
+      },
+      // Stage 2: Group by session_id to find unique sessions
+      {
+        $group: {
+          _id: '$session_id' // Corrected field name: session_id
+        }
+      },
+      // Stage 3: Count the number of unique groups (unique sessions)
+      {
+        $count: 'uniqueSessionCount'
+      }
+    ];
+
+
+    const result = await collection.aggregate(pipeline).toArray();
+
+    let count = 0;
+    if (result.length > 0) {
+      count = result[0].uniqueSessionCount;
+    }
+
+    return count;
+
+  } catch (error) {
+    console.error("Error counting unique page visitors via aggregation:", error);
+    return 0;
+  } finally {
+    if (client) {
+      await client.close();
+    }
+  }
 }
 
 export async function getSankeyData(
@@ -196,6 +274,57 @@ export async function getSankeyData(
     console.error("Error querying data from MongoDB:", error);
     return { nodes: [], links: [] };
   }
+}
+
+
+// Get all unique page paths within a date range
+export async function getPagePaths(
+startDate: string,
+endDate: string,
+): Promise<string[]> {
+let client: MongoClient | undefined;
+try {
+  client = await connectToDatabase();
+  const db = client.db(MONGODB_DB_NAME);
+  const collection = db.collection(PERFORMANCE_COLLECTION);
+
+  // Convert input dates to Unix timestamps (seconds)
+  const { startISOString, endISOString } = convertToISOString(startDate, endDate);
+
+  // Define the date range query using seconds
+  const query = {
+    timestamp: { // Compare against the integer timestamp field
+      $gte: startISOString,       // Greater than or equal to start (seconds)
+      $lt: endISOString // Less than the start of the next day (seconds)
+    },
+  };
+
+  console.log("Query for distinct page paths:", JSON.stringify(query, null, 2));
+
+  // Use the distinct method
+  const distinctPagePaths = await collection.distinct('page_path', query);
+
+  if (!Array.isArray(distinctPagePaths)) {
+      console.error("MongoDB distinct query did not return an array.");
+      return [];
+  }
+
+  // Filter out any non-string values
+  const stringPaths = distinctPagePaths.filter(
+      (path): path is string => typeof path === 'string' && path !== null && path !== undefined
+  );
+
+  console.log("Distinct page paths found:", stringPaths);
+  return stringPaths;
+
+} catch (error) {
+  console.error("Error querying distinct page paths from MongoDB:", error);
+  return []; // Return empty array on error
+} finally {
+    if (client) {
+        await client.close();
+    }
+}
 }
 
 function convertToISOString(startDate: string, endDate: string): { startISOString: string, endISOString: string } {

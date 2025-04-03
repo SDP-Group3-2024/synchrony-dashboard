@@ -25,6 +25,7 @@ interface PageAnalyticsClientProps {
   };
   clickData: ClickEvent[];
   totalPageVisitors: number;
+  pagePaths: string[];
 }
 
 export default function PageAnalyticsClient({
@@ -34,6 +35,7 @@ export default function PageAnalyticsClient({
   dateRange,
   clickData,
   totalPageVisitors,
+  pagePaths,
 }: PageAnalyticsClientProps) {
   return (
     <SidebarProvider>
@@ -66,7 +68,7 @@ export default function PageAnalyticsClient({
 
             {/* Filters */}
             <div className="mb-6">
-              <ScrollFilters />
+              <ScrollFilters pagePaths={pagePaths} />
             </div>
 
             {/* Analytics */}

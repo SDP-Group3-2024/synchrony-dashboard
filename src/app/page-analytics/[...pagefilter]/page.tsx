@@ -1,4 +1,4 @@
-import { getEvents, getTotalPageVisitors } from '@/app/lib/mongo';
+import { getEvents, getTotalPageVisitors, getPagePaths } from '@/app/lib/mongo';
 import { ClickEvent, ScrollEvent } from '@/app/lib/types';
 import PageAnalyticsClient from './page-client';
 
@@ -83,7 +83,6 @@ async function getClickData(
   }
 }
 
-// This is the recommended pattern for Next.js 14+
 export default async function Page({ params }: { params: { pagefilter: string[] } }) {
   // Properly await the params object
   const { pagefilter } = await params;
@@ -121,11 +120,7 @@ export default async function Page({ params }: { params: { pagefilter: string[] 
   const scrollData = await getScrollData(parsedPagePath, startDate, endDate);
   const clickData = await getClickData(parsedPagePath, startDate, endDate);
   const totalPageVisitors = await getTotalPageVisitors(startDate, endDate, parsedPagePath);
-  // If no data is found for this page, show a message
-  if (scrollData.length === 0) {
-    return <div>No data found for this page</div>;
-  }
-
+  const pagePaths = await getPagePaths(startDate, endDate);
   // Get the page title from the first event
   const pageTitle = scrollData[0]?.page_title || 'Page Analytics';
 
@@ -141,6 +136,7 @@ export default async function Page({ params }: { params: { pagefilter: string[] 
       pageTitle={pageTitle}
       dateRangeText={dateRangeText}
       dateRange={{ startDate, endDate }}
+      pagePaths={pagePaths}
     />
   );
 }

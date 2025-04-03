@@ -7,10 +7,20 @@ import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
-import { Input } from '../ui/input';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select';
 
-export function ScrollFilters() {
+interface ScrollFiltersProps {
+  pagePaths?: string[];
+}
+
+export function ScrollFilters({ pagePaths = [] }: ScrollFiltersProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -24,6 +34,7 @@ export function ScrollFilters() {
   const startDateParam = searchParams.get('startDate');
   const endDateParam = searchParams.get('endDate');
 
+  // Set default dates
   const defaultStartDate = startDateParam
     ? new Date(startDateParam)
     : (() => {
@@ -34,6 +45,7 @@ export function ScrollFilters() {
 
   const defaultEndDate = endDateParam ? new Date(endDateParam) : new Date();
 
+  // Initialize dateRange with default values
   const [dateRange, setDateRange] = useState([
     {
       startDate: defaultStartDate,
@@ -55,16 +67,14 @@ export function ScrollFilters() {
     }
   };
 
-  // Handle filter changes
-  const handleFilterChange = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const newPageFilter = formData.get('pageFilter') as string;
-    updateUrl(newPageFilter, dateRange[0].startDate, dateRange[0].endDate);
-  };
-
   // Update URL with new filters
-  const updateUrl = (page: string, startDate: Date, endDate: Date) => {
+  const updateUrl = (
+    page: string,
+    startDate: Date | undefined,
+    endDate: Date | undefined,
+  ) => {
+    if (!startDate || !endDate) return;
+
     // if the page path is / convert it to %20root
     if (page === '/') {
       page = '%20root';
@@ -77,9 +87,21 @@ export function ScrollFilters() {
 
   // Handle date range apply
   const handleApplyDateRange = () => {
+    if (!dateRange[0]?.startDate || !dateRange[0]?.endDate) return;
     updateUrl(pagePath, dateRange[0].startDate, dateRange[0].endDate);
     setShowDatePicker(false);
   };
+
+  // Handle page path change
+  const handlePagePathChange = (value: string) => {
+    if (!dateRange[0]?.startDate || !dateRange[0]?.endDate) return;
+    updateUrl(value, dateRange[0].startDate, dateRange[0].endDate);
+  };
+
+  // Ensure we have valid dates before rendering
+  if (!dateRange[0]?.startDate || !dateRange[0]?.endDate) {
+    return null;
+  }
 
   return (
     <div className="flex flex-wrap gap-4 items-center justify-between">
@@ -126,18 +148,25 @@ export function ScrollFilters() {
           )}
         </div>
 
-        <form
-          onSubmit={handleFilterChange}
-          className="flex gap-2"
+        <Select
+          value={pagePath}
+          onValueChange={handlePagePathChange}
         >
-          <Input
-            name="pageFilter"
-            defaultValue={pagePath}
-            placeholder="Enter page path"
-            className="w-[200px]"
-          />
-          <Button type="submit">Go</Button>
-        </form>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Select page path" />
+          </SelectTrigger>
+          <SelectContent>
+            {Array.isArray(pagePaths) &&
+              pagePaths.map((path) => (
+                <SelectItem
+                  key={path}
+                  value={path}
+                >
+                  {path}
+                </SelectItem>
+              ))}
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );
