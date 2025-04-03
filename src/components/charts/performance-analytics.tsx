@@ -4,29 +4,44 @@ import { formatDuration } from '@/lib/utils';
 
 interface PerformanceAnalyticsProps {
   data: PerformanceEventData[];
-  dateRange?: {
-    startDate: string;
-    endDate: string;
-  };
 }
 
-export function PerformanceAnalytics({ data, dateRange }: PerformanceAnalyticsProps) {
-  // Calculate average metrics
+export function PerformanceAnalytics({ data }: PerformanceAnalyticsProps) {
+  // Calculate average metrics, excluding zero values
   const metrics = {
-    loadTime: data.reduce((acc, curr) => acc + curr.load_time, 0) / data.length,
+    loadTime:
+      data.filter((d) => d.load_time > 0).reduce((acc, curr) => acc + curr.load_time, 0) /
+      (data.filter((d) => d.load_time > 0).length || 1),
     domInteractive:
-      data.reduce((acc, curr) => acc + curr.dom_interactive_time, 0) / data.length,
-    domComplete: data.reduce((acc, curr) => acc + curr.dom_complete_time, 0) / data.length,
+      data
+        .filter((d) => d.dom_interactive_time > 0)
+        .reduce((acc, curr) => acc + curr.dom_interactive_time, 0) /
+      (data.filter((d) => d.dom_interactive_time > 0).length || 1),
+    domComplete:
+      data
+        .filter((d) => d.dom_complete_time > 0)
+        .reduce((acc, curr) => acc + curr.dom_complete_time, 0) /
+      (data.filter((d) => d.dom_complete_time > 0).length || 1),
     firstContentfulPaint:
-      data.reduce((acc, curr) => acc + (curr.first_contentful_paint || 0), 0) / data.length,
+      data
+        .filter((d) => (d.first_contentful_paint || 0) > 0)
+        .reduce((acc, curr) => acc + (curr.first_contentful_paint || 0), 0) /
+      (data.filter((d) => (d.first_contentful_paint || 0) > 0).length || 1),
     largestContentfulPaint:
-      data.reduce((acc, curr) => acc + (curr.largest_contentful_paint || 0), 0) /
-      data.length,
+      data
+        .filter((d) => (d.largest_contentful_paint || 0) > 0)
+        .reduce((acc, curr) => acc + (curr.largest_contentful_paint || 0), 0) /
+      (data.filter((d) => (d.largest_contentful_paint || 0) > 0).length || 1),
     firstInputDelay:
-      data.reduce((acc, curr) => acc + (curr.first_input_delay || 0), 0) / data.length,
+      data
+        .filter((d) => (d.first_input_delay || 0) > 0)
+        .reduce((acc, curr) => acc + (curr.first_input_delay || 0), 0) /
+      (data.filter((d) => (d.first_input_delay || 0) > 0).length || 1),
     cumulativeLayoutShift:
-      data.reduce((acc, curr) => acc + (curr.cumulative_layout_shift || 0), 0) /
-      data.length,
+      data
+        .filter((d) => (d.cumulative_layout_shift || 0) > 0)
+        .reduce((acc, curr) => acc + (curr.cumulative_layout_shift || 0), 0) /
+      (data.filter((d) => (d.cumulative_layout_shift || 0) > 0).length || 1),
   };
 
   return (
