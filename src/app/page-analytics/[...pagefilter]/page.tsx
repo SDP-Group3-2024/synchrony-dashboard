@@ -1,5 +1,5 @@
 import { getEvents, getTotalPageVisitors, getPagePaths } from '@/app/lib/mongo';
-import { ClickEvent, ScrollEvent } from '@/app/lib/types';
+import { ClickEvent, PerformanceEventData, ScrollEvent } from '@/app/lib/types';
 import PageAnalyticsClient from './page-client';
 
 // Get date range for last month (last 30 days)
@@ -83,6 +83,26 @@ async function getClickData(
   }
 }
 
+async function getPerformanceData(
+  pagePath: string,
+  startDate: string,
+  endDate: string,
+): Promise<PerformanceEventData[]> {
+  try {
+    const data = await getEvents<PerformanceEventData>({
+      eventType: 'performance',
+      startDate,
+      endDate,
+      pagePath,
+      limit: 100,
+    });
+    return JSON.parse(JSON.stringify(data)) as PerformanceEventData[];
+  } catch (error) {
+    console.error('Failed to fetch performance data:', error);
+    return [];
+  }
+}
+
 export default async function Page({ params }: { params: { pagefilter: string[] } }) {
   // Properly await the params object
   const { pagefilter } = await params;
@@ -119,6 +139,7 @@ export default async function Page({ params }: { params: { pagefilter: string[] 
   const parsedPagePath = getParsedPagePath(pagePath);
   const scrollData = await getScrollData(parsedPagePath, startDate, endDate);
   const clickData = await getClickData(parsedPagePath, startDate, endDate);
+  const performanceData = await getPerformanceData(parsedPagePath, startDate, endDate);
   const totalPageVisitors = await getTotalPageVisitors(startDate, endDate, parsedPagePath);
   const pagePaths = await getPagePaths(startDate, endDate);
   // Get the page title from the first event
@@ -132,6 +153,7 @@ export default async function Page({ params }: { params: { pagefilter: string[] 
     <PageAnalyticsClient
       scrollData={scrollData}
       clickData={clickData}
+      performanceData={performanceData}
       totalPageVisitors={totalPageVisitors}
       pageTitle={pageTitle}
       dateRangeText={dateRangeText}

@@ -1,10 +1,11 @@
 'use client';
 
-import { ScrollEvent, ClickEvent } from '@/app/lib/types';
+import { ScrollEvent, ClickEvent, PerformanceEventData } from '@/app/lib/types';
 import { AppSidebar } from '@/components/app-sidebar';
 import { ScrollAnalytics } from '@/components/charts/scroll-analytics';
 import { ScrollFilters } from '@/components/charts/scroll-filters';
 import { ClickAnalytics } from '@/components/charts/click-analytics';
+import { PerformanceAnalytics } from '@/components/charts/performance-analytics';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -24,6 +25,7 @@ interface PageAnalyticsClientProps {
     endDate: string;
   };
   clickData: ClickEvent[];
+  performanceData: PerformanceEventData[];
   totalPageVisitors: number;
   pagePaths: string[];
 }
@@ -34,6 +36,7 @@ export default function PageAnalyticsClient({
   dateRangeText,
   dateRange,
   clickData,
+  performanceData,
   totalPageVisitors,
   pagePaths,
 }: PageAnalyticsClientProps) {
@@ -79,6 +82,10 @@ export default function PageAnalyticsClient({
             <ClickAnalytics
               data={clickData}
               totalPageVisitors={totalPageVisitors}
+            />
+            <PerformanceAnalytics
+              data={performanceData}
+              dateRange={dateRange}
             />
           </div>
         </div>

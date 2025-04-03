@@ -25,7 +25,16 @@ export interface BaseEventData {
   page_path: string;
   page_title: string;
 }
-
+export interface PerformanceEventData extends BaseEventData {
+  event_type: "performance";
+  load_time: number;
+  dom_interactive_time: number;
+  dom_complete_time: number;
+  first_contentful_paint?: number;
+  largest_contentful_paint?: number;
+  first_input_delay?: number;
+  cumulative_layout_shift?: number;
+}
 export interface ClickEvent extends BaseEventData {
   event_type: "click";
   element_tag: string;

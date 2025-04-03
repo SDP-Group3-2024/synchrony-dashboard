@@ -92,7 +92,12 @@ interface MongoEventQuery {
   timestamp?: TimestampRange;
   page_path?: string;
 }
-
+const eventCollectionMap: Record<string, string> = {
+  "scroll": SCROLL_COLLECTION,
+  "click": CLICK_COLLECTION,
+  "performance": PERFORMANCE_COLLECTION,
+  "page_exit": PAGE_EXIT_COLLECTION,
+}
 export async function getEvents<T extends BaseEventData>(
   query: EventQuery,
 ): Promise<T[]> {
@@ -100,7 +105,7 @@ export async function getEvents<T extends BaseEventData>(
     const { startDate, endDate, pagePath, limit } = query;
     const client = await connectToDatabase();
     const db = client.db(MONGODB_DB_NAME);
-    const collectionName = query.eventType === "scroll" ? SCROLL_COLLECTION : CLICK_COLLECTION;
+    const collectionName = eventCollectionMap[query.eventType];
     const collection = db.collection(collectionName);
 
     // Create query object based on date parameters
@@ -134,7 +139,6 @@ export async function getEvents<T extends BaseEventData>(
     return [];
   }
 }
-
 
 // Counts unique sessions visiting a specific page within a date range using aggregation
 export async function getTotalPageVisitors(
@@ -275,7 +279,6 @@ export async function getSankeyData(
     return { nodes: [], links: [] };
   }
 }
-
 
 // Get all unique page paths within a date range
 export async function getPagePaths(
