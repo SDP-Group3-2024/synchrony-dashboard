@@ -76,42 +76,6 @@ export function PerformanceAnalytics({ data, dateRange }: PerformanceAnalyticsPr
             </p>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Largest Contentful Paint</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">
-              {formatDuration(metrics.largestContentfulPaint)}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Time until largest content is painted
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>First Input Delay</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{formatDuration(metrics.firstInputDelay)}</p>
-            <p className="text-sm text-muted-foreground">
-              Delay before first user interaction
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Cumulative Layout Shift</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{metrics.cumulativeLayoutShift.toFixed(3)}</p>
-            <p className="text-sm text-muted-foreground">Measure of visual stability</p>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );

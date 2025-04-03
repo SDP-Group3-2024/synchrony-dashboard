@@ -26,9 +26,9 @@ export function ScrollFilters({ pagePaths = [] }: ScrollFiltersProps) {
   const searchParams = useSearchParams();
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  // Extract page path from URL, removing date portions
+  // Extract current page path from URL
   const fullPath = pathname.split('/').slice(2).join('/') || '';
-  const pagePath = fullPath.split('/')[0] || '';
+  const currentPagePath = fullPath.split('/')[0] || '';
 
   // Extract date range from URL or use defaults
   const startDateParam = searchParams.get('startDate');
@@ -88,7 +88,7 @@ export function ScrollFilters({ pagePaths = [] }: ScrollFiltersProps) {
   // Handle date range apply
   const handleApplyDateRange = () => {
     if (!dateRange[0]?.startDate || !dateRange[0]?.endDate) return;
-    updateUrl(pagePath, dateRange[0].startDate, dateRange[0].endDate);
+    updateUrl(currentPagePath, dateRange[0].startDate, dateRange[0].endDate);
     setShowDatePicker(false);
   };
 
@@ -149,11 +149,13 @@ export function ScrollFilters({ pagePaths = [] }: ScrollFiltersProps) {
         </div>
 
         <Select
-          value={pagePath}
+          value={currentPagePath}
           onValueChange={handlePagePathChange}
         >
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Select page path" />
+            <SelectValue placeholder="Select page path">
+              {currentPagePath === '%20root' ? '/' : currentPagePath}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {Array.isArray(pagePaths) &&
@@ -162,7 +164,7 @@ export function ScrollFilters({ pagePaths = [] }: ScrollFiltersProps) {
                   key={path}
                   value={path}
                 >
-                  {path}
+                  {path === '%20root' ? '/' : path}
                 </SelectItem>
               ))}
           </SelectContent>
