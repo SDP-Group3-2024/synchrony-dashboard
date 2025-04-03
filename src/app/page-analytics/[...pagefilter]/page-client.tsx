@@ -1,9 +1,10 @@
 'use client';
 
-import { ScrollEvent } from '@/app/lib/types';
+import { ScrollEvent, ClickEvent } from '@/app/lib/types';
 import { AppSidebar } from '@/components/app-sidebar';
 import { ScrollAnalytics } from '@/components/charts/scroll-analytics';
 import { ScrollFilters } from '@/components/charts/scroll-filters';
+import { ClickAnalytics } from '@/components/charts/click-analytics';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -17,22 +18,22 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/s
 interface PageAnalyticsClientProps {
   scrollData: ScrollEvent[];
   pageTitle: string;
-  pagePath: string;
   dateRangeText: string;
-  uniquePages: string[];
   dateRange?: {
     startDate: string;
     endDate: string;
   };
+  clickData: ClickEvent[];
+  totalPageVisitors: number;
 }
 
 export default function PageAnalyticsClient({
   scrollData,
   pageTitle,
-  pagePath,
   dateRangeText,
-  uniquePages,
   dateRange,
+  clickData,
+  totalPageVisitors,
 }: PageAnalyticsClientProps) {
   return (
     <SidebarProvider>
@@ -59,23 +60,23 @@ export default function PageAnalyticsClient({
         <div className="flex flex-1 flex-col gap-4 p-4">
           <div className="col-span-full w-full">
             <h1 className="text-2xl font-bold mb-4">
-              Scroll Behavior Analytics for {pageTitle}
+              Page Analytics for {pageTitle}
               {dateRangeText}
             </h1>
 
             {/* Filters */}
             <div className="mb-6">
-              <ScrollFilters
-                initialDateRange={dateRange}
-                pagePath={pagePath}
-                uniquePages={uniquePages}
-              />
+              <ScrollFilters />
             </div>
 
             {/* Analytics */}
             <ScrollAnalytics
               data={scrollData}
               dateRange={dateRange}
+            />
+            <ClickAnalytics
+              data={clickData}
+              totalPageVisitors={totalPageVisitors}
             />
           </div>
         </div>

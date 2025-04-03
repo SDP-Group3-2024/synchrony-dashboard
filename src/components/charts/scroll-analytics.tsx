@@ -134,7 +134,7 @@ function calculateChartData(data: ScrollEvent[]) {
   };
 }
 
-export function ScrollAnalytics({ data, dateRange }: ScrollAnalyticsProps) {
+export function ScrollAnalytics({ data }: ScrollAnalyticsProps) {
   const metrics = calculateMetrics(data);
   const chartData = calculateChartData(data);
 
@@ -271,72 +271,6 @@ export function ScrollAnalytics({ data, dateRange }: ScrollAnalyticsProps) {
               animate={true}
               motionStiffness={90}
               motionDamping={15}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="col-span-2">
-        <CardHeader>
-          <CardTitle>Viewport vs Scroll Position</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[300px]">
-            <ResponsiveScatterPlot
-              data={[
-                {
-                  id: 'Scroll Events',
-                  data: chartData.viewportRatioData,
-                },
-              ]}
-              margin={{ top: 60, right: 140, bottom: 70, left: 90 }}
-              xScale={{ type: 'linear', min: 0, max: 'auto' }}
-              yScale={{ type: 'linear', min: 0, max: 'auto' }}
-              blendMode="multiply"
-              axisTop={null}
-              axisRight={null}
-              axisBottom={{
-                tickSize: 5,
-                tickPadding: 5,
-                tickRotation: 0,
-                legend: 'Viewport Height',
-                legendPosition: 'middle',
-                legendOffset: 46,
-              }}
-              axisLeft={{
-                tickSize: 5,
-                tickPadding: 5,
-                tickRotation: 0,
-                legend: 'Scroll Position',
-                legendPosition: 'middle',
-                legendOffset: -60,
-              }}
-              legends={[
-                {
-                  anchor: 'bottom-right',
-                  direction: 'column',
-                  justify: false,
-                  translateX: 130,
-                  translateY: 0,
-                  itemsSpacing: 0,
-                  itemDirection: 'left-to-right',
-                  itemWidth: 100,
-                  itemHeight: 12,
-                  itemOpacity: 0.75,
-                  symbolSize: 12,
-                  symbolShape: 'circle',
-                  symbolBorderColor: 'rgba(0, 0, 0, .5)',
-                  effects: [
-                    {
-                      on: 'hover',
-                      style: {
-                        itemBackground: 'rgba(0, 0, 0, .03)',
-                        itemOpacity: 1,
-                      },
-                    },
-                  ],
-                },
-              ]}
             />
           </div>
         </CardContent>

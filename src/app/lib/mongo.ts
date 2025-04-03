@@ -1,14 +1,14 @@
 "server-only";
 import { MongoClient } from "mongodb";
-import { PageExitEvent, SankeyChartProps, ScrollEvent } from "./types";
+import { EventType, SankeyChartProps, BaseEventData } from "./types";
 
 // Load environment variables
 const MONGODB_URI = process.env.MONGODB_URI;
 const MONGODB_DB_NAME = process.env.MONGODB_DB_NAME;
-const EVENTS_COLLECTION = "UserInteractionEvents"; // Collection name for events
-const SANKEY_COLLECTION = "SankeyData"; // Collection name for sankey data
-const SCROLL_COLLECTION = "ScrollEvents"; // Collection name for scroll events
-
+const SANKEY_COLLECTION = "SankeyData"; 
+const SCROLL_COLLECTION = "ScrollEvents";
+const CLICK_COLLECTION = "ClickEvents";
+const PAGE_EXIT_COLLECTION = "PageEvents";
 // MongoDB connection setup for server components
 let cachedClient: MongoClient | null = null;
 
@@ -32,30 +32,8 @@ async function connectToDatabase() {
   }
 }
 
-export async function getEvents(eventType: string): Promise<PageExitEvent[]> {
-  if (!eventType) {
-    return [];
-  }
-
-  try {
-    const client = await connectToDatabase();
-    const db = client.db(MONGODB_DB_NAME);
-    const collection = db.collection(EVENTS_COLLECTION);
-
-    // Query MongoDB for events of the specified type
-    const items = await collection
-      .find({ event_type: String(eventType) })
-      .toArray();
-
-    // MongoDB already returns JSON objects, so no need for unmarshalling
-    return items as unknown as PageExitEvent[];
-  } catch (error: unknown) {
-    console.error("Error fetching events from MongoDB:", error);
-    return [];
-  }
-}
-
-export interface ScrollEventQuery {
+export interface EventQuery {
+  eventType: EventType;
   startDate?: string;
   endDate?: string;
   pagePath?: string;
@@ -68,32 +46,26 @@ interface TimestampRange {
   $lte: string;
 }
 
-interface MongoScrollQuery {
-  event_type: string;
+interface MongoEventQuery {
   timestamp?: TimestampRange;
   page_path?: string;
 }
 
-export async function getScrollEvents(
-  query: ScrollEventQuery,
-): Promise<ScrollEvent[]> {
+export async function getEvents<T extends BaseEventData>(
+  query: EventQuery,
+): Promise<T[]> {
   try {
     const { startDate, endDate, pagePath, limit } = query;
     const client = await connectToDatabase();
     const db = client.db(MONGODB_DB_NAME);
-    const collection = db.collection(SCROLL_COLLECTION);
+    const collectionName = query.eventType === "scroll" ? SCROLL_COLLECTION : CLICK_COLLECTION;
+    const collection = db.collection(collectionName);
 
     // Create query object based on date parameters
-    const mongoQuery: MongoScrollQuery = { event_type: "scroll" };
+    const mongoQuery: MongoEventQuery = {  };
     
     if (startDate && endDate) {
-      // Convert to ISO date strings to match the format in the database
-      const startISOString = new Date(startDate).toISOString();
-      // Make the end date inclusive by setting it to the end of the day (23:59:59.999)
-      const endDateObj = new Date(endDate);
-      endDateObj.setDate(endDateObj.getDate() + 1);
-      const endISOString = endDateObj.toISOString();
-
+      const { startISOString, endISOString } = convertToISOString(startDate, endDate);
       mongoQuery.timestamp = {
         $gte: startISOString,
         $lte: endISOString,
@@ -106,24 +78,43 @@ export async function getScrollEvents(
 
     console.log("MongoDB query:", JSON.stringify(mongoQuery, null, 2));
 
-    // Query MongoDB for scroll events
     const items = await collection
       .find(mongoQuery)
       .sort({ timestamp: -1 })
       .limit(limit)
       .toArray();
 
-    console.log(`Found ${items.length} scroll events`);
+    console.log(`Found ${items.length} ${query.eventType} events`);
     
-    // Properly type the return value
-    return items as unknown as ScrollEvent[];
+    return items as unknown as T[];
   } catch (error) {
-    console.error("Error fetching scroll events from MongoDB:", error);
+    console.error(`Error fetching ${query.eventType} events from MongoDB:`, error);
     return [];
   }
 }
-
-
+// TODO: Fix
+export async function getTotalPageVisitors(
+  startDate: string,
+  endDate: string,
+  pagePath: string,
+): Promise<number> {
+  const client = await connectToDatabase();
+  const db = client.db(MONGODB_DB_NAME);
+  const collection = db.collection(PAGE_EXIT_COLLECTION);
+  const { startISOString, endISOString } = convertToISOString(startDate, endDate);
+  const query: MongoEventQuery = {
+    timestamp: {
+      $gte: startISOString,
+      $lte: endISOString,
+    },
+    page_path: pagePath,
+  };
+  console.log("Page event query:", JSON.stringify(query, null, 2));
+  const count = await collection
+    .countDocuments(query);
+  console.log("Total page visitors:", count);
+  return count;
+}
 
 export async function getSankeyData(
   startDate: string,
@@ -205,4 +196,14 @@ export async function getSankeyData(
     console.error("Error querying data from MongoDB:", error);
     return { nodes: [], links: [] };
   }
+}
+
+function convertToISOString(startDate: string, endDate: string): { startISOString: string, endISOString: string } {
+  // Convert to ISO date strings to match the format in the database
+  const startISOString = new Date(startDate).toISOString();
+  // Make the end date inclusive by setting it to the end of the day (23:59:59.999)
+  const endDateObj = new Date(endDate);
+  endDateObj.setDate(endDateObj.getDate() + 1);
+  const endISOString = endDateObj.toISOString();
+  return { startISOString, endISOString };
 }

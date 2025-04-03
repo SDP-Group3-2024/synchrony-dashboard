@@ -1,5 +1,5 @@
-import { getScrollEvents } from '@/app/lib/mongo';
-import { ScrollEvent } from '@/app/lib/types';
+import { getEvents, getTotalPageVisitors } from '@/app/lib/mongo';
+import { ClickEvent, ScrollEvent } from '@/app/lib/types';
 import PageAnalyticsClient from './page-client';
 
 // Get date range for last month (last 30 days)
@@ -46,66 +46,40 @@ async function getScrollData(
   endDate: string,
 ): Promise<ScrollEvent[]> {
   try {
-    // if the page path is %20root, convert it to /
-    if (pagePath === '%20root') {
-      pagePath = '';
-    }
-
     // Get scroll events with date range
-    const data = await getScrollEvents({
+    const data = await getEvents<ScrollEvent>({
+      eventType: 'scroll',
       startDate,
       endDate,
-      pagePath: '/' + pagePath,
+      pagePath,
       limit: 100,
     });
 
     console.log('MongoDB data count:', data.length);
-
-    // If no events found, return test data
-    if (data.length === 0) {
-      console.log('No events found, returning test data');
-      return [
-        {
-          _id: 'test-id',
-          event_type: 'scroll',
-          session_id: 'test-session',
-          timestamp: Date.now() / 1000,
-          page_url: `https://example.com${pagePath}`,
-          page_path: pagePath,
-          page_title: `Test Page for ${pagePath}`,
-          scroll_depth: 50,
-          scroll_direction: 'down',
-          viewport_height: 900,
-          document_height: 2000,
-          event_id: 'test-event-id',
-          user_ip: '127.0.0.1',
-          user_agent: 'Test Agent',
-        },
-      ];
-    }
-
     return JSON.parse(JSON.stringify(data)) as ScrollEvent[];
   } catch (error) {
     console.error('Failed to fetch scroll data:', error);
-    // Return test data for error cases
-    return [
-      {
-        _id: 'error-id',
-        event_type: 'scroll',
-        session_id: 'error-session',
-        timestamp: Date.now() / 1000,
-        page_url: `https://example.com/error`,
-        page_path: `/error`,
-        page_title: `Error Page`,
-        scroll_depth: 0,
-        scroll_direction: 'none',
-        viewport_height: 900,
-        document_height: 2000,
-        event_id: 'error-event-id',
-        user_ip: '127.0.0.1',
-        user_agent: 'Error Agent',
-      },
-    ];
+    return [];
+  }
+}
+
+async function getClickData(
+  pagePath: string,
+  startDate: string,
+  endDate: string,
+): Promise<ClickEvent[]> {
+  try {
+    const data = await getEvents<ClickEvent>({
+      eventType: 'click',
+      startDate,
+      endDate,
+      pagePath,
+      limit: 100,
+    });
+    return JSON.parse(JSON.stringify(data)) as ClickEvent[];
+  } catch (error) {
+    console.error('Failed to fetch click data:', error);
+    return [];
   }
 }
 
@@ -143,8 +117,10 @@ export default async function Page({ params }: { params: { pagefilter: string[] 
   }
 
   const { pagePath, startDate, endDate } = parseSlug(pagefilter);
-  const scrollData = await getScrollData(pagePath, startDate, endDate);
-
+  const parsedPagePath = getParsedPagePath(pagePath);
+  const scrollData = await getScrollData(parsedPagePath, startDate, endDate);
+  const clickData = await getClickData(parsedPagePath, startDate, endDate);
+  const totalPageVisitors = await getTotalPageVisitors(startDate, endDate, parsedPagePath);
   // If no data is found for this page, show a message
   if (scrollData.length === 0) {
     return <div>No data found for this page</div>;
@@ -153,22 +129,26 @@ export default async function Page({ params }: { params: { pagefilter: string[] 
   // Get the page title from the first event
   const pageTitle = scrollData[0]?.page_title || 'Page Analytics';
 
-  // Get unique pages for the filter
-  const uniquePages = Array.from(new Set(scrollData.map((event) => event.page_title)));
-
   // Format the date range for display
   const dateRangeText = ` (${new Date(startDate).toLocaleDateString()} - ${new Date(
     endDate,
   ).toLocaleDateString()})`;
-
   return (
     <PageAnalyticsClient
       scrollData={scrollData}
+      clickData={clickData}
+      totalPageVisitors={totalPageVisitors}
       pageTitle={pageTitle}
-      pagePath={pagePath}
       dateRangeText={dateRangeText}
-      uniquePages={uniquePages}
       dateRange={{ startDate, endDate }}
     />
   );
+}
+
+function getParsedPagePath(pagePath: string): string {
+  console.log('pagePath', pagePath);
+  if (pagePath === '%20root') {
+    return '/';
+  }
+  return '/' + pagePath;
 }
