@@ -1,4 +1,8 @@
-import { getEvents, getTotalPageVisitors, getPagePaths } from '@/app/lib/mongo';
+import {
+  getEvents,
+  getTotalPageVisitors,
+  getPagePaths,
+} from '@/app/lib/analytics-repository';
 import { ClickEvent, PerformanceEventData, ScrollEvent } from '@/app/lib/types';
 import PageAnalyticsClient from './page-client';
 

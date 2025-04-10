@@ -83,10 +83,7 @@ export default function PageAnalyticsClient({
               data={clickData}
               totalPageVisitors={totalPageVisitors}
             />
-            <PerformanceAnalytics
-              data={performanceData}
-              dateRange={dateRange}
-            />
+            <PerformanceAnalytics data={performanceData} />
           </div>
         </div>
       </SidebarInset>
