@@ -1,22 +1,11 @@
 import React from 'react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ResponsiveBar } from '@nivo/bar';
 import { ResponsivePie } from '@nivo/pie';
-import { ResponsiveScatterPlot } from '@nivo/scatterplot';
 import { ScrollEvent } from '@/app/lib/types';
 
 interface ScrollAnalyticsProps {
   data: ScrollEvent[];
-  dateRange?: {
-    startDate: string;
-    endDate: string;
-  };
 }
 
 // Helper function to calculate metrics
@@ -94,8 +83,8 @@ function calculateChartData(data: ScrollEvent[]) {
   ];
 
   // Viewport ratio data
-  const viewportRatioData = data.map((item) => ({
-    id: item.event_id,
+  const viewportRatioData = data.map((item, index) => ({
+    id: `event-${index}`,
     x: item.viewport_height,
     y: Math.round((item.scroll_depth / 100) * item.document_height),
     page: item.page_title,
@@ -269,8 +258,7 @@ export function ScrollAnalytics({ data }: ScrollAnalyticsProps) {
               labelSkipHeight={12}
               labelTextColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
               animate={true}
-              motionStiffness={90}
-              motionDamping={15}
+              motionConfig="gentle"
             />
           </div>
         </CardContent>

@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     const scrollCollection = db.collection("ScrollEvents");
 
     // Create query object based on date parameters
-    const query: any = { event_type: "scroll" };
+    const query: { event_type: string; timestamp?: { $gte: number; $lte: number } } = { event_type: "scroll" };
     if (startDate && endDate) {
       // Convert dates to timestamps if needed
       const startTimestamp = Math.floor(new Date(startDate).getTime() / 1000);

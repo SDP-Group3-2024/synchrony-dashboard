@@ -22,7 +22,7 @@ async function connectToDatabase() {
       await cachedClient.db(MONGODB_DB_NAME).command({ ping: 1 });
       return cachedClient;
     } catch (error) {
-      console.log("Cached connection failed, creating new connection");
+      console.log("Cached connection failed, creating new connection", error);
       cachedClient = null;
     }
   }
