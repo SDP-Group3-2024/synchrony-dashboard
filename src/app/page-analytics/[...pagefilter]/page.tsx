@@ -23,6 +23,7 @@ function parseSlug(pagefilter: string[]): {
   startDate: string;
   endDate: string;
 } {
+  console.log('pagefilter:', pagefilter);
   if (pagefilter.length === 1) {
     const { startDate, endDate } = getLastMonthDateRange();
     return {
@@ -113,8 +114,8 @@ async function getPerformanceData(
 // --- Page Component ---
 
 export default async function Page({ params }: { params: { pagefilter: string[] } }) {
-  const { pagefilter } = params;
-
+  const { pagefilter } = await params;
+  console.log('pagefilter:', pagefilter);
   // --- Validation (Updated error message) ---
   if (!pagefilter || pagefilter.length === 0 || pagefilter.length === 2) {
     const message =
@@ -140,6 +141,7 @@ export default async function Page({ params }: { params: { pagefilter: string[] 
   // --- Parse Parameters ---
   // rawPagePath will be '_root' or 'some-page' etc.
   const { pagePath: rawPagePath, startDate, endDate } = parseSlug(pagefilter);
+  console.log('rawPagePath:', rawPagePath, 'startDate:', startDate, 'endDate:', endDate);
   // parsedPagePath will be '/' or '/some-page' etc.
   const parsedPagePath = getParsedPagePath(rawPagePath);
 
@@ -180,6 +182,7 @@ export default async function Page({ params }: { params: { pagefilter: string[] 
       pageTitle={pageTitle}
       dateRangeText={dateRangeText}
       dateRange={{ startDate, endDate }}
+      pagePath={parsedPagePath}
       pagePaths={pagePaths}
     />
   );
