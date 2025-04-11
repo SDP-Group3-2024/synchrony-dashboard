@@ -7,7 +7,7 @@ import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import {
   Select,
   SelectContent,
@@ -18,34 +18,26 @@ import {
 
 interface ScrollFiltersProps {
   pagePaths?: string[];
+  initialDateRange: {
+    startDate: string;
+    endDate: string;
+  };
+  pagePath: string;
 }
 
-export function ScrollFilters({ pagePaths = [] }: ScrollFiltersProps) {
+export function ScrollFilters({
+  pagePaths = [],
+  initialDateRange,
+  pagePath,
+}: ScrollFiltersProps) {
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  // Extract current page path from URL
-  const fullPath = pathname.split('/').slice(2).join('/') || '';
-  const currentPagePath = fullPath.split('/')[0] || '';
+  // Set default dates from props
+  const defaultStartDate = new Date(initialDateRange.startDate);
+  const defaultEndDate = new Date(initialDateRange.endDate);
 
-  // Extract date range from URL or use defaults
-  const startDateParam = searchParams.get('startDate');
-  const endDateParam = searchParams.get('endDate');
-
-  // Set default dates
-  const defaultStartDate = startDateParam
-    ? new Date(startDateParam)
-    : (() => {
-        const date = new Date();
-        date.setDate(date.getDate() - 7);
-        return date;
-      })();
-
-  const defaultEndDate = endDateParam ? new Date(endDateParam) : new Date();
-
-  // Initialize dateRange with default values
+  // Initialize date range state
   const [dateRange, setDateRange] = useState([
     {
       startDate: defaultStartDate,
@@ -77,7 +69,7 @@ export function ScrollFilters({ pagePaths = [] }: ScrollFiltersProps) {
 
     // if the page path is / convert it to %20root
     if (page === '/') {
-      page = '%20root';
+      page = '_root';
     }
     const startDateStr = format(startDate, 'yyyy-MM-dd');
     const endDateStr = format(endDate, 'yyyy-MM-dd');
@@ -88,7 +80,7 @@ export function ScrollFilters({ pagePaths = [] }: ScrollFiltersProps) {
   // Handle date range apply
   const handleApplyDateRange = () => {
     if (!dateRange[0]?.startDate || !dateRange[0]?.endDate) return;
-    updateUrl(currentPagePath, dateRange[0].startDate, dateRange[0].endDate);
+    updateUrl('', dateRange[0].startDate, dateRange[0].endDate);
     setShowDatePicker(false);
   };
 
@@ -148,27 +140,26 @@ export function ScrollFilters({ pagePaths = [] }: ScrollFiltersProps) {
           )}
         </div>
 
-        <Select
-          value={currentPagePath}
-          onValueChange={handlePagePathChange}
-        >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Select page path">
-              {currentPagePath === '%20root' ? '/' : currentPagePath}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            {Array.isArray(pagePaths) &&
-              pagePaths.map((path) => (
+        {pagePaths && pagePaths.length > 0 && (
+          <Select
+            value={pagePath}
+            onValueChange={handlePagePathChange}
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder={pagePath === '_root' ? '/' : pagePath} />
+            </SelectTrigger>
+            <SelectContent>
+              {pagePaths.map((path) => (
                 <SelectItem
                   key={path}
                   value={path}
                 >
-                  {path === '%20root' ? '/' : path}
+                  {path === '_root' ? '/' : path}
                 </SelectItem>
               ))}
-          </SelectContent>
-        </Select>
+            </SelectContent>
+          </Select>
+        )}
       </div>
     </div>
   );

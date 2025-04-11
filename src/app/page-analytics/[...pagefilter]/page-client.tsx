@@ -20,7 +20,7 @@ interface PageAnalyticsClientProps {
   scrollData: ScrollEvent[];
   pageTitle: string;
   dateRangeText: string;
-  dateRange?: {
+  dateRange: {
     startDate: string;
     endDate: string;
   };
@@ -28,17 +28,19 @@ interface PageAnalyticsClientProps {
   performanceData: PerformanceEventData[];
   totalPageVisitors: number;
   pagePaths: string[];
+  pagePath: string;
 }
 
 export default function PageAnalyticsClient({
   scrollData,
   pageTitle,
   dateRangeText,
-  dateRange,
   clickData,
   performanceData,
   totalPageVisitors,
   pagePaths,
+  dateRange,
+  pagePath,
 }: PageAnalyticsClientProps) {
   return (
     <SidebarProvider>
@@ -71,22 +73,20 @@ export default function PageAnalyticsClient({
 
             {/* Filters */}
             <div className="mb-6">
-              <ScrollFilters pagePaths={pagePaths} />
+              <ScrollFilters
+                pagePaths={pagePaths}
+                initialDateRange={dateRange}
+                pagePath={pagePath}
+              />
             </div>
 
             {/* Analytics */}
-            <ScrollAnalytics
-              data={scrollData}
-              dateRange={dateRange}
-            />
+            <ScrollAnalytics data={scrollData} />
             <ClickAnalytics
               data={clickData}
               totalPageVisitors={totalPageVisitors}
             />
-            <PerformanceAnalytics
-              data={performanceData}
-              dateRange={dateRange}
-            />
+            <PerformanceAnalytics data={performanceData} />
           </div>
         </div>
       </SidebarInset>

@@ -22,7 +22,7 @@ async function connectToDatabase() {
       await cachedClient.db(MONGODB_DB_NAME).command({ ping: 1 });
       return cachedClient;
     } catch (error) {
-      console.log("Cached connection failed, creating new connection");
+      console.log("Cached connection failed, creating new connection", error);
       cachedClient = null;
     }
   }
@@ -133,7 +133,14 @@ export async function getEvents<T extends BaseEventData>(
 
     console.log(`Found ${items.length} ${query.eventType} events`);
     
-    return items as unknown as T[];
+    // Convert MongoDB documents to plain objects, converting ObjectId to string
+    const plainItems = items.map(item => ({
+      ...item,
+      _id: item._id.toString(),
+      event_id: item.event_id?.toString() // Convert event_id if it exists
+    }));
+    
+    return plainItems as unknown as T[];
   } catch (error) {
     console.error(`Error fetching ${query.eventType} events from MongoDB:`, error);
     return [];
@@ -146,9 +153,8 @@ export async function getTotalPageVisitors(
   endDate: string,
   pagePath: string,
 ): Promise<number> {
-  let client: MongoClient | undefined;
   try {
-    client = await connectToDatabase();
+    const client = await connectToDatabase();
     const db = client.db(MONGODB_DB_NAME);
     const collection = db.collection(PERFORMANCE_COLLECTION);
 
@@ -191,10 +197,6 @@ export async function getTotalPageVisitors(
   } catch (error) {
     console.error("Error counting unique page visitors via aggregation:", error);
     return 0;
-  } finally {
-    if (client) {
-      await client.close();
-    }
   }
 }
 
@@ -285,49 +287,44 @@ export async function getPagePaths(
 startDate: string,
 endDate: string,
 ): Promise<string[]> {
-let client: MongoClient | undefined;
-try {
-  client = await connectToDatabase();
-  const db = client.db(MONGODB_DB_NAME);
-  const collection = db.collection(PERFORMANCE_COLLECTION);
+  try {
+    const client = await connectToDatabase();
+    const db = client.db(MONGODB_DB_NAME);
+    const collection = db.collection(PERFORMANCE_COLLECTION);
 
-  // Convert input dates to Unix timestamps (seconds)
-  const { startISOString, endISOString } = convertToISOString(startDate, endDate);
+    // Convert input dates to Unix timestamps (seconds)
+    const { startISOString, endISOString } = convertToISOString(startDate, endDate);
 
-  // Define the date range query using seconds
-  const query = {
-    timestamp: { // Compare against the integer timestamp field
-      $gte: startISOString,       // Greater than or equal to start (seconds)
-      $lt: endISOString // Less than the start of the next day (seconds)
-    },
-  };
+    // Define the date range query using seconds
+    const query = {
+      timestamp: { // Compare against the integer timestamp field
+        $gte: startISOString,       // Greater than or equal to start (seconds)
+        $lt: endISOString // Less than the start of the next day (seconds)
+      },
+    };
 
-  console.log("Query for distinct page paths:", JSON.stringify(query, null, 2));
+    console.log("Query for distinct page paths:", JSON.stringify(query, null, 2));
 
-  // Use the distinct method
-  const distinctPagePaths = await collection.distinct('page_path', query);
+    // Use the distinct method
+    const distinctPagePaths = await collection.distinct('page_path', query);
 
-  if (!Array.isArray(distinctPagePaths)) {
-      console.error("MongoDB distinct query did not return an array.");
-      return [];
-  }
-
-  // Filter out any non-string values
-  const stringPaths = distinctPagePaths.filter(
-      (path): path is string => typeof path === 'string' && path !== null && path !== undefined
-  );
-
-  console.log("Distinct page paths found:", stringPaths);
-  return stringPaths;
-
-} catch (error) {
-  console.error("Error querying distinct page paths from MongoDB:", error);
-  return []; // Return empty array on error
-} finally {
-    if (client) {
-        await client.close();
+    if (!Array.isArray(distinctPagePaths)) {
+        console.error("MongoDB distinct query did not return an array.");
+        return [];
     }
-}
+
+    // Filter out any non-string values
+    const stringPaths = distinctPagePaths.filter(
+        (path): path is string => typeof path === 'string' && path !== null && path !== undefined
+    );
+
+    console.log("Distinct page paths found:", stringPaths);
+    return stringPaths;
+
+  } catch (error) {
+    console.error("Error querying distinct page paths from MongoDB:", error);
+    return []; // Return empty array on error
+  }
 }
 
 function convertToISOString(startDate: string, endDate: string): { startISOString: string, endISOString: string } {

@@ -15,24 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/select';
-
-// Define scroll event interface
-interface ScrollEvent {
-  _id: string;
-  event_type: string;
-  session_id: string;
-  timestamp: number;
-  page_url: string;
-  page_path: string;
-  page_title: string;
-  scroll_depth: number;
-  scroll_direction: string;
-  viewport_height: number;
-  document_height: number;
-  event_id: string;
-  user_ip: string;
-  user_agent: string;
-}
+import { ScrollEvent } from '@/app/lib/types';
 
 interface ScrollAnalyticsWrapperProps {
   initialData: ScrollEvent[];
@@ -65,7 +48,8 @@ const ScrollAnalyticsWrapper: React.FC<ScrollAnalyticsWrapperProps> = ({ initial
       : ['Home Page', 'About Us', 'Products', 'Blog', 'Contact Us'];
 
   // Handle date range selection
-  const handleDateRangeChange = (ranges: any) => {
+  const handleDateRangeChange = (ranges: unknown) => {
+    // @ts-expect-error This type is such a pain. Took forever to figure out, and when i import the type from react-date-range, it doesn't work.
     setDateRange([ranges.selection]);
   };
 
@@ -79,7 +63,7 @@ const ScrollAnalyticsWrapper: React.FC<ScrollAnalyticsWrapperProps> = ({ initial
       const startDate = format(dateRange[0].startDate, 'yyyy-MM-dd');
       const endDate = format(dateRange[0].endDate, 'yyyy-MM-dd');
 
-      let url = `/api/scroll-data?startDate=${startDate}&endDate=${endDate}`;
+      const url = `/api/scroll-data?startDate=${startDate}&endDate=${endDate}`;
 
       const response = await fetch(url);
       if (!response.ok) {
@@ -104,30 +88,9 @@ const ScrollAnalyticsWrapper: React.FC<ScrollAnalyticsWrapperProps> = ({ initial
     }
   };
 
-  // Apply filters when changing page filter and provide sample data if none exists
   useEffect(() => {
     if (!initialData || initialData.length === 0) {
-      // Provide sample data if no data is available
-      const sampleData: ScrollEvent[] = Array.from({ length: 20 }).map((_, i) => ({
-        _id: `sample-${i}`,
-        event_type: 'scroll',
-        session_id: `session-${i % 5}`,
-        timestamp: Math.floor(Date.now() / 1000) - i * 3600,
-        page_url: `http://example.com/${
-          ['home', 'about', 'products', 'blog', 'contact'][i % 5]
-        }`,
-        page_path: `/${['home', 'about', 'products', 'blog', 'contact'][i % 5]}`,
-        page_title: ['Home Page', 'About Us', 'Products', 'Blog', 'Contact Us'][i % 5],
-        scroll_depth: Math.floor(Math.random() * 100),
-        scroll_direction: i % 3 === 0 ? 'up' : 'down',
-        viewport_height: 700 + Math.floor(Math.random() * 300),
-        document_height: 1500 + Math.floor(Math.random() * 500),
-        event_id: `event-${i}`,
-        user_ip: '127.0.0.1',
-        user_agent: 'Mozilla/5.0',
-      }));
-
-      setData(sampleData);
+      setData([]);
     } else if (pageFilter === 'all') {
       setData(initialData);
     } else {
@@ -161,7 +124,6 @@ const ScrollAnalyticsWrapper: React.FC<ScrollAnalyticsWrapperProps> = ({ initial
                   months={1}
                   direction="horizontal"
                   editableDateInputs={true}
-                  showSelectionPreview={true}
                   moveRangeOnFirstSelection={false}
                 />
                 <div className="p-2 border-t flex justify-end gap-2">
@@ -217,7 +179,7 @@ const ScrollAnalyticsWrapper: React.FC<ScrollAnalyticsWrapperProps> = ({ initial
 
       {/* Analytics dashboard */}
       <div className={isLoading ? 'opacity-50 pointer-events-none' : ''}>
-        <ScrollAnalytics initialData={data} />
+        <ScrollAnalytics data={data} />
       </div>
     </div>
   );
