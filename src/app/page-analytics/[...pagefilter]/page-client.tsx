@@ -34,7 +34,6 @@ export default function PageAnalyticsClient({
   scrollData,
   pageTitle,
   dateRangeText,
-  dateRange,
   clickData,
   performanceData,
   totalPageVisitors,
@@ -75,10 +74,7 @@ export default function PageAnalyticsClient({
             </div>
 
             {/* Analytics */}
-            <ScrollAnalytics
-              data={scrollData}
-              dateRange={dateRange}
-            />
+            <ScrollAnalytics data={scrollData} />
             <ClickAnalytics
               data={clickData}
               totalPageVisitors={totalPageVisitors}

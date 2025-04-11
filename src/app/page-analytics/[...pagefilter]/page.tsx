@@ -6,26 +6,23 @@ import {
 import { ClickEvent, PerformanceEventData, ScrollEvent } from '@/app/lib/types';
 import PageAnalyticsClient from './page-client';
 
-// Get date range for last month (last 30 days)
+// --- Helper Functions ---
+
 function getLastMonthDateRange(): { startDate: string; endDate: string } {
   const endDate = new Date();
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - 30);
-
-  // Format as YYYY-MM-DD
   return {
     startDate: startDate.toISOString().split('T')[0],
     endDate: endDate.toISOString().split('T')[0],
   };
 }
 
-// Parse the pagefilter to extract page path and date range
 function parseSlug(pagefilter: string[]): {
   pagePath: string;
   startDate: string;
   endDate: string;
 } {
-  // If only page path is provided, use last month as default date range
   if (pagefilter.length === 1) {
     const { startDate, endDate } = getLastMonthDateRange();
     return {
@@ -34,8 +31,6 @@ function parseSlug(pagefilter: string[]): {
       endDate,
     };
   }
-
-  // If all parameters are provided, use them
   return {
     pagePath: pagefilter[0],
     startDate: pagefilter[1],
@@ -43,14 +38,24 @@ function parseSlug(pagefilter: string[]): {
   };
 }
 
-// Fetch scroll data from MongoDB for a specific page and date range
+// Updated function to use '_root'
+function getParsedPagePath(pagePathSlug: string): string {
+  console.log('pagePathSlug received:', pagePathSlug);
+  if (pagePathSlug === '_root') {
+    return '/'; // Return the root path
+  }
+  // Ensure path starts with a single '/' and remove any leading slash from the slug itself
+  return '/' + pagePathSlug.replace(/^\//, '');
+}
+
+// --- Data Fetching Functions (Assume getEvents returns serializable data) ---
+
 async function getScrollData(
   pagePath: string,
   startDate: string,
   endDate: string,
 ): Promise<ScrollEvent[]> {
   try {
-    // Get scroll events with date range
     const data = await getEvents<ScrollEvent>({
       eventType: 'scroll',
       startDate,
@@ -58,9 +63,7 @@ async function getScrollData(
       pagePath,
       limit: 100,
     });
-
-    console.log('MongoDB data count:', data.length);
-    return JSON.parse(JSON.stringify(data)) as ScrollEvent[];
+    return data;
   } catch (error) {
     console.error('Failed to fetch scroll data:', error);
     return [];
@@ -80,7 +83,7 @@ async function getClickData(
       pagePath,
       limit: 100,
     });
-    return JSON.parse(JSON.stringify(data)) as ClickEvent[];
+    return data;
   } catch (error) {
     console.error('Failed to fetch click data:', error);
     return [];
@@ -100,19 +103,24 @@ async function getPerformanceData(
       pagePath,
       limit: 100,
     });
-    return JSON.parse(JSON.stringify(data)) as PerformanceEventData[];
+    return data;
   } catch (error) {
     console.error('Failed to fetch performance data:', error);
     return [];
   }
 }
 
+// --- Page Component ---
+
 export default async function Page({ params }: { params: { pagefilter: string[] } }) {
-  // Properly await the params object
-  const { pagefilter } = await params;
+  const { pagefilter } = params;
 
-  // Validate we have at least the page path parameter
-  if (!pagefilter || pagefilter.length === 0) {
+  // --- Validation (Updated error message) ---
+  if (!pagefilter || pagefilter.length === 0 || pagefilter.length === 2) {
+    const message =
+      pagefilter?.length === 2
+        ? 'You provided 2 parameters which is ambiguous.'
+        : 'Please provide a page path.';
     return (
       <div className="p-8 text-center">
         <h1 className="text-2xl font-bold mb-4">Invalid URL Format</h1>
@@ -120,39 +128,49 @@ export default async function Page({ params }: { params: { pagefilter: string[] 
           Expected format: /page-analytics/[page-path] or
           /page-analytics/[page-path]/[start-date]/[end-date]
         </p>
-        <p className="mt-2 text-sm">Use &quot;%20root&quot; to represent the root path.</p>
-      </div>
-    );
-  }
-
-  // Also validate if we have 2 parameters (which is invalid - we need either 1 or 3)
-  if (pagefilter.length === 2) {
-    return (
-      <div className="p-8 text-center">
-        <h1 className="text-2xl font-bold mb-4">Invalid URL Format</h1>
-        <p>
-          Expected format: /page-analytics/[page-path] or
-          /page-analytics/[page-path]/[start-date]/[end-date]
+        <p className="mt-2 text-sm">{message}</p>
+        {/* Updated instruction to use _root */}
+        <p className="mt-2 text-sm">
+          Use &quot;_root&quot; to represent the root path (/).
         </p>
-        <p className="mt-2 text-sm">You provided 2 parameters which is ambiguous.</p>
       </div>
     );
   }
 
-  const { pagePath, startDate, endDate } = parseSlug(pagefilter);
-  const parsedPagePath = getParsedPagePath(pagePath);
-  const scrollData = await getScrollData(parsedPagePath, startDate, endDate);
-  const clickData = await getClickData(parsedPagePath, startDate, endDate);
-  const performanceData = await getPerformanceData(parsedPagePath, startDate, endDate);
-  const totalPageVisitors = await getTotalPageVisitors(startDate, endDate, parsedPagePath);
-  const pagePaths = await getPagePaths(startDate, endDate);
-  // Get the page title from the first event
-  const pageTitle = scrollData[0]?.page_title || 'Page Analytics';
+  // --- Parse Parameters ---
+  // rawPagePath will be '_root' or 'some-page' etc.
+  const { pagePath: rawPagePath, startDate, endDate } = parseSlug(pagefilter);
+  // parsedPagePath will be '/' or '/some-page' etc.
+  const parsedPagePath = getParsedPagePath(rawPagePath);
 
-  // Format the date range for display
+  // --- Fetch Data in Parallel ---
+  let scrollData: ScrollEvent[] = [];
+  let clickData: ClickEvent[] = [];
+  let performanceData: PerformanceEventData[] = [];
+  let totalPageVisitors: number = 0;
+  let pagePaths: string[] = [];
+
+  try {
+    [scrollData, clickData, performanceData, totalPageVisitors, pagePaths] =
+      await Promise.all([
+        getScrollData(parsedPagePath, startDate, endDate),
+        getClickData(parsedPagePath, startDate, endDate),
+        getPerformanceData(parsedPagePath, startDate, endDate),
+        getTotalPageVisitors(startDate, endDate, parsedPagePath),
+        getPagePaths(startDate, endDate),
+      ]);
+  } catch (error) {
+    console.error('Error fetching page analytics data in parallel:', error);
+    // Consider rendering a more specific error UI here
+  }
+
+  // --- Process Data ---
+  const pageTitle = scrollData[0]?.page_title || `Analytics: ${parsedPagePath}`;
   const dateRangeText = ` (${new Date(startDate).toLocaleDateString()} - ${new Date(
     endDate,
   ).toLocaleDateString()})`;
+
+  // --- Render Client Component ---
   return (
     <PageAnalyticsClient
       scrollData={scrollData}
@@ -165,12 +183,4 @@ export default async function Page({ params }: { params: { pagefilter: string[] 
       pagePaths={pagePaths}
     />
   );
-}
-
-function getParsedPagePath(pagePath: string): string {
-  console.log('pagePath', pagePath);
-  if (pagePath === '%20root') {
-    return '/';
-  }
-  return '/' + pagePath;
 }
