@@ -1,11 +1,14 @@
-![Synchrony Logo](synchrony-logo-tm.jpg)
+<p align="center">
+  <img src="synchrony-logo-tm.jpg">
+</p>
 
 <h1 style="background-color:#000E2F; color:white; padding:4px;">Synchrony Analytics Dashboard</h1>
 
-
 A web analytics dashboard built with Next.js that visualizes user interactions and performance metrics collected from websites. Built for Synchrony, by the UConn College of Engineering.
 
-![UConn College of Engineering](UConn_COE_Logo.jpg)
+<p align="center">
+  <img src="UConn_COE_Logo.jpg">
+</p>
 
 <h2 style="background-color:#000E2F; color:white; padding:4px;">Quick Start</h2>
 
