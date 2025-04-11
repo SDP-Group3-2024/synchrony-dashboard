@@ -1,8 +1,13 @@
-# Synchrony Dashboard
+![Synchrony Logo](synchrony-logo-tm.jpg)
 
-A web analytics dashboard built with Next.js that visualizes user interactions and performance metrics collected from websites.
+<h1 style="background-color:#000E2F; color:white; padding:4px;">Synchrony Analytics Dashboard</h1>
 
-## Quick Start
+
+A web analytics dashboard built with Next.js that visualizes user interactions and performance metrics collected from websites. Built for Synchrony, by the UConn College of Engineering.
+
+![UConn College of Engineering](UConn_COE_Logo.jpg)
+
+<h2 style="background-color:#000E2F; color:white; padding:4px;">Quick Start</h2>
 
 1. Clone the repository
 2. Install dependencies: `npm i` (you may need to use `npm i --force` due to Next.js version compatibility issues)
@@ -14,7 +19,7 @@ A web analytics dashboard built with Next.js that visualizes user interactions a
 4. Run the development server: `npm run dev`
 5. Access the dashboard at `http://localhost:3000`
 
-## Features
+<h2 style="background-color:#000E2F; color:white; padding:4px;">Features</h2>
 
 - **Page Analytics**: Detailed insights for specific pages including:
   - Scroll depth and behavior
@@ -25,7 +30,7 @@ A web analytics dashboard built with Next.js that visualizes user interactions a
 - **Scroll Analytics**: Scrolling behavior across the site
 - **Date Range Filtering**: Analyze data within specific time periods
 
-## Technology Stack
+<h2 style="background-color:#000E2F; color:white; padding:4px;">Technology Stack</h2>
 
 - **Frontend Framework**: Next.js 15 (App Router)
 - **UI Components**: Shadcn/UI and Tailwind CSS
@@ -33,7 +38,7 @@ A web analytics dashboard built with Next.js that visualizes user interactions a
 - **Database**: MongoDB
 - **Typescript**: For type safety and better developer experience
 
-## Data Structure
+<h2 style="background-color:#000E2F; color:white; padding:4px;">Data Structure</h2>
 
 ### MongoDB Collections
 
@@ -121,13 +126,13 @@ The server component queries MongoDB for:
 
 This data is then passed to the client component for rendering the visualizations.
 
-## Development
+<h2 style="background-color:#000E2F; color:white; padding:4px;">Development</h2>
 
 - Run linter: `npm run lint`
 - Build for production: `npm run build`
 - Start production server: `npm run start`
 
-## License
+<h2 style="background-color:#000E2F; color:white; padding:4px;">License</h2>
 
 Private
 
