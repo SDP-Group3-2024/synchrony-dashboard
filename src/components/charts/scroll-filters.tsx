@@ -33,9 +33,9 @@ export function ScrollFilters({
   const router = useRouter();
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  // Set default dates from props
-  const defaultStartDate = new Date(initialDateRange.startDate);
-  const defaultEndDate = new Date(initialDateRange.endDate);
+  // Set default dates from props with timezone adjustment
+  const defaultStartDate = new Date(`${initialDateRange.startDate}T12:00:00Z`);
+  const defaultEndDate = new Date(`${initialDateRange.endDate}T12:00:00Z`);
 
   // Initialize date range state
   const [dateRange, setDateRange] = useState([
@@ -71,6 +71,7 @@ export function ScrollFilters({
     if (page === '/') {
       page = '_root';
     }
+    console.log('page', page);
     const startDateStr = format(startDate, 'yyyy-MM-dd');
     const endDateStr = format(endDate, 'yyyy-MM-dd');
     const newPath = `/page-analytics/${page}/${startDateStr}/${endDateStr}`;
@@ -80,7 +81,7 @@ export function ScrollFilters({
   // Handle date range apply
   const handleApplyDateRange = () => {
     if (!dateRange[0]?.startDate || !dateRange[0]?.endDate) return;
-    updateUrl('', dateRange[0].startDate, dateRange[0].endDate);
+    updateUrl(pagePath, dateRange[0].startDate, dateRange[0].endDate);
     setShowDatePicker(false);
   };
 

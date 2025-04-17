@@ -42,6 +42,7 @@ export default function PageAnalyticsClient({
   dateRange,
   pagePath,
 }: PageAnalyticsClientProps) {
+  console.log('dateRange', dateRange);
   return (
     <SidebarProvider>
       <AppSidebar />
