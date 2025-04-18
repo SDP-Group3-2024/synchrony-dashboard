@@ -12,6 +12,7 @@ function getLastMonthDateRange(): { startDate: string; endDate: string } {
   const endDate = new Date();
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - 30);
+  console.log('startDate:', startDate, 'endDate:', endDate);
   return {
     startDate: startDate.toISOString().split('T')[0],
     endDate: endDate.toISOString().split('T')[0],
@@ -168,9 +169,9 @@ export default async function Page({ params }: { params: { pagefilter: string[] 
 
   // --- Process Data ---
   const pageTitle = scrollData[0]?.page_title || `Analytics: ${parsedPagePath}`;
-  const dateRangeText = ` (${new Date(startDate).toLocaleDateString()} - ${new Date(
-    endDate,
-  ).toLocaleDateString()})`;
+  const dateRangeText = ` (${new Date(
+    `${startDate}T12:00:00Z`,
+  ).toLocaleDateString()} - ${new Date(`${endDate}T12:00:00Z`).toLocaleDateString()})`;
 
   // --- Render Client Component ---
   return (
